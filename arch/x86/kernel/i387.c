@@ -313,7 +313,7 @@ int xfpregs_set(struct task_struct *target, const struct user_regset *regset,
 	 * presence of FP and SSE state.
 	 */
 	if (cpu_has_xsave)
-		target->thread.fpu.state->xsave.xsave_hdr.xstate_bv |= XSTATE_FPSSE;
+		target->thread.fpu.state->xsave.xsave_hdr.xstate_bv |= XSTATE_EXTEND_MASK;
 
 	return ret;
 }

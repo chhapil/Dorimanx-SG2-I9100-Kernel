@@ -188,7 +188,7 @@ static inline int save_xstate_epilog(void __user *buf, int ia32_frame)
 	 * header as well as change any contents in the memory layout.
 	 * xrestore as part of sigreturn will capture all the changes.
 	 */
-	xstate_bv |= XSTATE_FPSSE;
+	xstate_bv |= XSTATE_EXTEND_MASK;
 
 	err |= __put_user(xstate_bv, (__u32 *)&x->xsave_hdr.xstate_bv);
 
@@ -290,7 +290,7 @@ sanitize_restored_xstate(struct task_struct *tsk,
 		 * layout and not enabled by the OS.
 		 */
 		if (fx_only)
-			xsave_hdr->xstate_bv = XSTATE_FPSSE;
+			xsave_hdr->xstate_bv = XSTATE_EXTEND_MASK;
 		else
 			xsave_hdr->xstate_bv &= (pcntxt_mask & xstate_bv);
 	}
@@ -313,7 +313,7 @@ static inline int restore_user_xstate(void __user *buf, u64 xbv, int fx_only)
 {
 	if (use_xsave()) {
 		if ((unsigned long)buf % 64 || fx_only) {
-			u64 init_bv = pcntxt_mask & ~XSTATE_FPSSE;
+			u64 init_bv = pcntxt_mask & ~XSTATE_EXTEND_MASK;
 			xrstor_state(init_xstate_buf, init_bv);
 			return fxrstor_user(buf);
 		} else {
@@ -535,7 +535,7 @@ static void __init xstate_enable_boot_cpu(void)
 	cpuid_count(XSTATE_CPUID, 0, &eax, &ebx, &ecx, &edx);
 	pcntxt_mask = eax + ((u64)edx << 32);
 
-	if ((pcntxt_mask & XSTATE_FPSSE) != XSTATE_FPSSE) {
+	if ((pcntxt_mask & XSTATE_EXTEND_MASK) != XSTATE_EXTEND_MASK) {
 		pr_err("FP/SSE not shown under xsave features 0x%llx\n",
 		       pcntxt_mask);
 		BUG();
