@@ -2595,7 +2595,7 @@ cifs_writev(struct kiocb *iocb, const struct iovec *iov,
  *		rc = generic_file_aio_write(iocb, iov, nr_segs, pos);
 */
 				     CIFS_WRITE_OP)) {
-		rc = __generic_file_aio_write(iocb, iov, nr_segs);
+		rc = generic_file_aio_write(iocb, iov, nr_segs, pos);
 		mutex_unlock(&inode->i_mutex);
 
 		if (rc > 0) {
