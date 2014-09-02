@@ -28,6 +28,8 @@
 #include <linux/mman.h>
 #include <linux/mmu_notifier.h>
 #include <linux/fs.h>
+#include <linux/mm.h>
+#include <linux/vmacache.h>
 #include <linux/nsproxy.h>
 #include <linux/capability.h>
 #include <linux/cpu.h>
@@ -38,7 +40,6 @@
 #include <linux/swap.h>
 #include <linux/syscalls.h>
 #include <linux/jiffies.h>
-#include <linux/tracehook.h>
 #include <linux/futex.h>
 #include <linux/compat.h>
 #include <linux/kthread.h>
@@ -72,6 +73,7 @@
 #include <linux/signalfd.h>
 #include <linux/uprobes.h>
 #include <linux/aio.h>
+#include <linux/compiler.h>
 
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -199,9 +201,6 @@ struct kmem_cache *vm_area_cachep;
 /* SLAB cache for mm_struct structures (tsk->mm) */
 static struct kmem_cache *mm_cachep;
 
-/* Notifier list called when a task struct is freed */
-static ATOMIC_NOTIFIER_HEAD(task_free_notifier);
-
 static void account_kernel_stack(struct thread_info *ti, int account)
 {
 	struct zone *zone = page_zone(virt_to_page(ti));
@@ -235,18 +234,6 @@ static inline void put_signal_struct(struct signal_struct *sig)
 		free_signal_struct(sig);
 }
 
-int task_free_register(struct notifier_block *n)
-{
-	return atomic_notifier_chain_register(&task_free_notifier, n);
-}
-EXPORT_SYMBOL(task_free_register);
-
-int task_free_unregister(struct notifier_block *n)
-{
-	return atomic_notifier_chain_unregister(&task_free_notifier, n);
-}
-EXPORT_SYMBOL(task_free_unregister);
-
 void __put_task_struct(struct task_struct *tsk)
 {
 	WARN_ON(!tsk->exit_state);
@@ -259,7 +246,6 @@ void __put_task_struct(struct task_struct *tsk)
 	delayacct_tsk_free(tsk);
 	put_signal_struct(tsk->signal);
 
-	atomic_notifier_call_chain(&task_free_notifier, 0, tsk);
 	if (!profile_handoff_task(tsk))
 		free_task(tsk);
 }
@@ -301,7 +287,7 @@ void __init fork_init(unsigned long mempages)
 		init_task.signal->rlim[RLIMIT_NPROC];
 }
 
-int __attribute__((weak)) arch_dup_task_struct(struct task_struct *dst,
+int __weak arch_dup_task_struct(struct task_struct *dst,
 					       struct task_struct *src)
 {
 	*dst = *src;
@@ -383,7 +369,7 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 
 	mm->locked_vm = 0;
 	mm->mmap = NULL;
-	mm->mmap_cache = NULL;
+	mm->vmacache_seqnum = 0;
 	mm->map_count = 0;
 	cpumask_clear(mm_cpumask(mm));
 	mm->mm_rb = RB_ROOT;
@@ -469,6 +455,7 @@ static int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		__vma_link_rb(mm, tmp, rb_link, rb_parent);
 		rb_link = &tmp->vm_rb.rb_right;
 		rb_parent = &tmp->vm_rb;
+
 		mm->map_count++;
 		retval = copy_page_range(mm, oldmm, mpnt);
 
@@ -548,8 +535,6 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p)
 	atomic_set(&mm->mm_count, 1);
 	init_rwsem(&mm->mmap_sem);
 	INIT_LIST_HEAD(&mm->mmlist);
-	mm->flags = (current->mm) ?
-		(current->mm->flags & MMF_INIT_MASK) : default_dump_filter;
 	mm->core_state = NULL;
 	atomic_long_set(&mm->nr_ptes, 0);
 	memset(&mm->rss_stat, 0, sizeof(mm->rss_stat));
@@ -558,8 +543,15 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p)
 	mm_init_owner(mm, p);
 	clear_tlb_flush_pending(mm);
 
-	if (likely(!mm_alloc_pgd(mm))) {
+	if (current->mm) {
+		mm->flags = current->mm->flags & MMF_INIT_MASK;
+		mm->def_flags = current->mm->def_flags & VM_INIT_DEF_MASK;
+	} else {
+		mm->flags = default_dump_filter;
 		mm->def_flags = 0;
+	}
+
+	if (likely(!mm_alloc_pgd(mm))) {
 		mmu_notifier_mm_init(mm);
 		return mm;
 	}
@@ -899,6 +891,9 @@ static int copy_mm(unsigned long clone_flags, struct task_struct *tsk)
 	if (!oldmm)
 		return 0;
 
+	/* initialize the new vmacache entries */
+	vmacache_flush(tsk);
+
 	if (clone_flags & CLONE_VM) {
 		atomic_inc(&oldmm->mm_users);
 		mm = oldmm;
@@ -1094,15 +1089,6 @@ static int copy_signal(unsigned long clone_flags, struct task_struct *tsk)
 	return 0;
 }
 
-static void copy_flags(unsigned long clone_flags, struct task_struct *p)
-{
-	unsigned long new_flags = p->flags;
-
-	new_flags &= ~(PF_SUPERPRIV | PF_WQ_WORKER);
-	new_flags |= PF_FORKNOEXEC;
-	p->flags = new_flags;
-}
-
 SYSCALL_DEFINE1(set_tid_address, int __user *, tidptr)
 {
 	current->clear_child_tid = tidptr;
@@ -1252,7 +1238,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto bad_fork_cleanup_count;
 
 	delayacct_tsk_init(p);	/* Must remain after dup_task_struct() */
-	copy_flags(clone_flags, p);
+	p->flags &= ~(PF_SUPERPRIV | PF_WQ_WORKER);
+	p->flags |= PF_FORKNOEXEC;
 	INIT_LIST_HEAD(&p->children);
 	INIT_LIST_HEAD(&p->sibling);
 	rcu_copy_process(p);
@@ -1296,9 +1283,8 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if (IS_ERR(p->mempolicy)) {
 		retval = PTR_ERR(p->mempolicy);
 		p->mempolicy = NULL;
-		goto bad_fork_cleanup_cgroup;
+		goto bad_fork_cleanup_threadgroup_lock;
 	}
-	mpol_fix_fork_child_flag(p);
 #endif
 #ifdef CONFIG_CPUSETS
 	p->cpuset_mem_spread_rotor = NUMA_NO_NODE;
@@ -1549,11 +1535,10 @@ bad_fork_cleanup_policy:
 	perf_event_free_task(p);
 #ifdef CONFIG_NUMA
 	mpol_put(p->mempolicy);
-bad_fork_cleanup_cgroup:
+bad_fork_cleanup_threadgroup_lock:
 #endif
 	if (clone_flags & CLONE_THREAD)
 		threadgroup_change_end(current);
-	cgroup_exit(p, 0);
 	delayacct_tsk_free(p);
 	module_put(task_thread_info(p)->exec_domain->module);
 bad_fork_cleanup_count:
@@ -1643,17 +1628,6 @@ long do_fork(unsigned long clone_flags,
 			get_task_struct(p);
 		}
 
-		/*
-		 * Child is ready but hasn't started running yet.  Queue
-		 * SIGSTOP if it's gonna be ptraced - it doesn't matter who
-		 * attached/attaching to this task, the pending SIGSTOP is
-		 * right in any case.
-		 */
-		if (unlikely(p->ptrace)) {
-			sigaddset(&p->pending.signal, SIGSTOP);
-			set_tsk_thread_flag(p, TIF_SIGPENDING);
-		}
-
 		wake_up_new_task(p);
 
 		/* forking complete and child started to run, tell ptracer */
@@ -1723,13 +1697,7 @@ SYSCALL_DEFINE5(clone, unsigned long, clone_flags, unsigned long, newsp,
 		 int, tls_val)
 #endif
 {
-/* see https://github.com/dorimanx/Dorimanx-SG2-I9100-Kernel/commit/
- * 6893432732cb60417f05ff3fb2e3943c00e4b9cf
- */
-	long ret = do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr);
-	asmlinkage_protect(5, ret, clone_flags, newsp,
-			parent_tidptr, child_tidptr, tls_val);
-	return ret;
+	return do_fork(clone_flags, newsp, 0, parent_tidptr, child_tidptr);
 }
 #endif
 

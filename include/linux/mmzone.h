@@ -35,23 +35,26 @@
  */
 #define PAGE_ALLOC_COSTLY_ORDER 3
 
-#ifndef CONFIG_DMA_CMA
-
-#define MIGRATE_UNMOVABLE     0
-#define MIGRATE_RECLAIMABLE   1
-#define MIGRATE_MOVABLE       2
-#define MIGRATE_PCPTYPES      3 /* the number of types on the pcp lists */
-#define MIGRATE_RESERVE       3
-#define MIGRATE_ISOLATE       4 /* can't allocate from here */
-#define MIGRATE_TYPES         5
-
-#else
+/*
+ *#ifndef CONFIG_DMA_CMA
+ *
+ *#define MIGRATE_UNMOVABLE     0
+ *#define MIGRATE_RECLAIMABLE   1
+ *#define MIGRATE_MOVABLE       2
+ *#define MIGRATE_PCPTYPES      3 *//* the number of types on the pcp lists *//*
+ *#define MIGRATE_RESERVE       3
+ *#define MIGRATE_ISOLATE       4 *//* can't allocate from here *//*
+ *#define MIGRATE_TYPES         5
+ *
+ *#else
+*/
 enum {
 	MIGRATE_UNMOVABLE,
 	MIGRATE_RECLAIMABLE,
 	MIGRATE_MOVABLE,
 	MIGRATE_PCPTYPES,	/* the number of types on the pcp lists */
 	MIGRATE_RESERVE = MIGRATE_PCPTYPES,
+#ifdef CONFIG_CMA
 	/*
 	 * MIGRATE_CMA migration type is designed to mimic the way
 	 * ZONE_MOVABLE works.  Only movable pages can be allocated
@@ -66,16 +69,14 @@ enum {
 	 * a single pageblock.
 	 */
 	MIGRATE_CMA,
+#endif
 #ifdef CONFIG_MEMORY_ISOLATION
 	MIGRATE_ISOLATE,	/* can't allocate from here */
 #endif
 	MIGRATE_TYPES
 };
 
-bool is_cma_pageblock(struct page *page);
-#endif
-
-#ifdef CONFIG_DMA_CMA
+#ifdef CONFIG_CMA
 #  define is_migrate_cma(migratetype) unlikely((migratetype) == MIGRATE_CMA)
 #else
 #  define is_migrate_cma(migratetype) false
@@ -368,7 +369,7 @@ struct zone {
 	 * free areas of different sizes
 	 */
 	spinlock_t		lock;
-#if defined CONFIG_COMPACTION || defined CONFIG_DMA_CMA
+#if defined CONFIG_COMPACTION || defined CONFIG_CMA
 	/* Set to true when the PG_migrate_skip bits should be cleared */
 	bool			compact_blockskip_flush;
 
@@ -891,7 +892,7 @@ static inline int is_highmem_idx(enum zone_type idx)
 }
 
 /**
- * is_highmem - helper function to quickly check if a struct zone is a
+ * is_highmem - helper function to quickly check if a struct zone is a 
  *              highmem zone or not.  This is an attempt to keep references
  *              to ZONE_{DMA/NORMAL/HIGHMEM/etc} in general code to a minimum.
  * @zone - pointer to struct zone variable

@@ -43,7 +43,6 @@
 #include <linux/sysctl.h>
 #include <linux/oom.h>
 #include <linux/prefetch.h>
-#include <linux/sched/rt.h>
 
 #include <asm/tlbflush.h>
 #include <asm/div64.h>
@@ -1110,7 +1109,7 @@ cull_mlocked:
 
 activate_locked:
 		/* Not a candidate for swapping, so reclaim swap space. */
-		if (PageSwapCache(page))
+		if (PageSwapCache(page) && vm_swap_full())
 			try_to_free_swap(page);
 		VM_BUG_ON_PAGE(PageActive(page), page);
 		SetPageActive(page);
@@ -2272,33 +2271,6 @@ static inline bool compaction_ready(struct zone *zone, struct scan_control *sc)
 }
 
 /*
- * Helper functions to adjust nice level of kswapd, based on the priority of
- * the task (p) that called it. If it is already higher priority we do not
- * demote its nice level since it is still working on behalf of a higher
- * priority task. With kernel threads we leave it at nice 0.
- *
- * We don't ever run kswapd real time, so if a real time task calls kswapd we
- * set it to highest SCHED_NORMAL priority.
- */
-static inline int effective_sc_prio(struct task_struct *p)
-{
-	if (likely(p->mm)) {
-		if (rt_task(p))
-			return -20;
-		return task_nice(p);
-	}
-	return 0;
-}
-
-static void set_kswapd_nice(struct task_struct *kswapd, int active)
-{
-	long nice = effective_sc_prio(current);
-
-	if (task_nice(kswapd) > nice || !active)
-		set_user_nice(kswapd, nice);
-}
-
-/*
  * This is the direct reclaim path, for page-allocating processes.  We only
  * try to reclaim pages from zones which will satisfy the caller's allocation
  * request.
@@ -2328,15 +2300,18 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
 	unsigned long lru_pages = 0;
 	bool aborted_reclaim = false;
 	struct reclaim_state *reclaim_state = current->reclaim_state;
+	gfp_t orig_mask;
 	struct shrink_control shrink = {
 		.gfp_mask = sc->gfp_mask,
 	};
+	enum zone_type requested_highidx = gfp_zone(sc->gfp_mask);
 
 	/*
 	 * If the number of buffer_heads in the machine exceeds the maximum
 	 * allowed level, force direct reclaim to scan the highmem zone as
 	 * highmem pages could be pinning lowmem pages storing buffer_heads
 	 */
+	orig_mask = sc->gfp_mask;
 	if (buffer_heads_over_limit)
 		sc->gfp_mask |= __GFP_HIGHMEM;
 
@@ -2370,7 +2345,8 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
 				 * noticeable problem, like transparent huge
 				 * page allocations.
 				 */
-				if (compaction_ready(zone, sc)) {
+				if ((zonelist_zone_idx(z) <= requested_highidx)
+				    && compaction_ready(zone, sc)) {
 					aborted_reclaim = true;
 					continue;
 				}
@@ -2406,6 +2382,12 @@ static bool shrink_zones(struct zonelist *zonelist, struct scan_control *sc)
 			reclaim_state->reclaimed_slab = 0;
 		}
 	}
+
+	/*
+	 * Restore to original mask to avoid the impact on the caller if we
+	 * promoted it to __GFP_HIGHMEM.
+	 */
+	sc->gfp_mask = orig_mask;
 
 	return aborted_reclaim;
 }
@@ -3312,7 +3294,6 @@ static int kswapd(void *p)
 void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx)
 {
 	pg_data_t *pgdat;
-	int active;
 
 	if (!populated_zone(zone))
 		return;
@@ -3324,9 +3305,7 @@ void wakeup_kswapd(struct zone *zone, int order, enum zone_type classzone_idx)
 		pgdat->kswapd_max_order = order;
 		pgdat->classzone_idx = min(pgdat->classzone_idx, classzone_idx);
 	}
-	active = waitqueue_active(&pgdat->kswapd_wait);
-	set_kswapd_nice(pgdat->kswapd, active);
-	if (!active)
+	if (!waitqueue_active(&pgdat->kswapd_wait))
 		return;
 	if (zone_balanced(zone, order, 0, 0))
 		return;

@@ -276,9 +276,6 @@ static unsigned long global_dirtyable_memory(void)
 	if (!vm_highmem_is_dirtyable)
 		x -= highmem_dirtyable_memory(x);
 
-	/* Subtract min_free_kbytes */
-	x -= min_t(unsigned long, x, min_free_kbytes >> (PAGE_SHIFT - 10));
-
 	return x + 1;	/* Ensure that we never return 0 */
 }
 
@@ -1576,9 +1573,9 @@ pause:
 		bdi_start_background_writeback(bdi);
 }
 
-void set_page_dirty_balance(struct page *page, int page_mkwrite)
+void set_page_dirty_balance(struct page *page)
 {
-	if (set_page_dirty(page) || page_mkwrite) {
+	if (set_page_dirty(page)) {
 		struct address_space *mapping = page_mapping(page);
 
 		if (mapping)

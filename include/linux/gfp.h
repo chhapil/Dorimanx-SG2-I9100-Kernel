@@ -24,11 +24,7 @@ struct vm_area_struct;
 #define ___GFP_REPEAT		0x400u
 #define ___GFP_NOFAIL		0x800u
 #define ___GFP_NORETRY		0x1000u
-#ifdef CONFIG_DMA_CMA
-#define ___GFP_CMA		0x2000u
-#else
 #define ___GFP_MEMALLOC		0x2000u
-#endif
 #define ___GFP_COMP		0x4000u
 #define ___GFP_ZERO		0x8000u
 #define ___GFP_NOMEMALLOC	0x10000u
@@ -55,13 +51,7 @@ struct vm_area_struct;
 #define __GFP_HIGHMEM	((__force gfp_t)___GFP_HIGHMEM)
 #define __GFP_DMA32	((__force gfp_t)___GFP_DMA32)
 #define __GFP_MOVABLE	((__force gfp_t)___GFP_MOVABLE)  /* Page is movable */
-#ifndef CONFIG_DMA_CMA
 #define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE)
-#else
-#define __GFP_CMA	((__force gfp_t)___GFP_CMA)
-#define GFP_ZONEMASK	(__GFP_DMA|__GFP_HIGHMEM|__GFP_DMA32|__GFP_MOVABLE| \
-			__GFP_CMA)
-#endif
 /*
  * Action modifiers - doesn't change the zoning
  *
@@ -99,16 +89,6 @@ struct vm_area_struct;
 #define __GFP_RECLAIMABLE ((__force gfp_t)___GFP_RECLAIMABLE) /* Page is reclaimable */
 #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
 
-/*
- * __GFP_NO_KSWAPD indicates that the VM should favour failing the allocation
- * over excessive disruption of the system. Currently this means
- * 1. Do not wake kswapd (hence the flag name)
- * 2. Do not use stall in synchronous compaction for high-order allocations
- *    as this may cause the caller to stall writing out pages
- *
- * This flag it primarily intended for use with transparent hugepage support.
- * If the flag is used outside the VM, linux-mm should be cc'd for review.
- */
 #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
 #define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) /* On behalf of other node */
 #define __GFP_KMEMCG	((__force gfp_t)___GFP_KMEMCG) /* Allocation comes from a memcg-accounted resource */
@@ -154,11 +134,7 @@ struct vm_area_struct;
 #endif
 
 /* This mask makes up all the page movable related flags */
-#ifndef CONFIG_DMA_CMA
 #define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE)
-#else
-#define GFP_MOVABLE_MASK (__GFP_RECLAIMABLE|__GFP_MOVABLE|__GFP_CMA)
-#endif
 
 /* Control page allocator reclaim behavior */
 #define GFP_RECLAIM_MASK (__GFP_WAIT|__GFP_HIGH|__GFP_IO|__GFP_FS|\
@@ -191,14 +167,8 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
 		return MIGRATE_UNMOVABLE;
 
 	/* Group based on mobility */
-#ifndef CONFIG_DMA_CMA
 	return (((gfp_flags & __GFP_MOVABLE) != 0) << 1) |
 		((gfp_flags & __GFP_RECLAIMABLE) != 0);
-#else
-	return (((gfp_flags & __GFP_MOVABLE) != 0) << 1) |
-		(((gfp_flags & __GFP_CMA) != 0) << 1) |
-		((gfp_flags & __GFP_RECLAIMABLE) != 0);
-#endif
 }
 
 #ifdef CONFIG_HIGHMEM
@@ -244,7 +214,7 @@ static inline int allocflags_to_migratetype(gfp_t gfp_flags)
  *       0x9    => DMA or NORMAL (MOVABLE+DMA)
  *       0xa    => MOVABLE (Movable is valid only if HIGHMEM is set too)
  *       0xb    => BAD (MOVABLE+HIGHMEM+DMA)
- *       0xc    => DMA32 (MOVABLE+HIGHMEM+DMA32)
+ *       0xc    => DMA32 (MOVABLE+DMA32)
  *       0xd    => BAD (MOVABLE+DMA32+DMA)
  *       0xe    => BAD (MOVABLE+DMA32+HIGHMEM)
  *       0xf    => BAD (MOVABLE+DMA32+HIGHMEM+DMA)
@@ -439,13 +409,14 @@ static inline bool pm_suspended_storage(void)
 }
 #endif /* CONFIG_PM_SLEEP */
 
-#ifdef CONFIG_DMA_CMA
+#ifdef CONFIG_CMA
+
 /* The below functions must be run on a range from a single zone. */
 extern int alloc_contig_range(unsigned long start, unsigned long end,
-				unsigned migratetype);
+			      unsigned migratetype);
 extern void free_contig_range(unsigned long pfn, unsigned nr_pages);
 
-/* DMA_CMA stuff */
+/* CMA stuff */
 extern void init_cma_reserved_pageblock(struct page *page);
 
 #endif

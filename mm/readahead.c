@@ -8,9 +8,7 @@
  */
 
 #include <linux/kernel.h>
-#include <linux/fs.h>
 #include <linux/gfp.h>
-#include <linux/mm.h>
 #include <linux/export.h>
 #include <linux/blkdev.h>
 #include <linux/backing-dev.h>
@@ -20,31 +18,7 @@
 #include <linux/syscalls.h>
 #include <linux/file.h>
 
-unsigned long max_readahead_pages = VM_MAX_READAHEAD * 1024 / PAGE_CACHE_SIZE;
-
-static int __init readahead(char *str)
-{
-	unsigned long bytes;
-
-	if (!str)
-		return -EINVAL;
-	bytes = memparse(str, &str);
-	if (*str != '\0')
-		return -EINVAL;
-
-	if (bytes) {
-		if (bytes < PAGE_CACHE_SIZE)	/* missed 'k'/'m' suffixes? */
-			return -EINVAL;
-		if (bytes > 128 << 20)		/* limit to 128MB */
-			bytes = 128 << 20;
-	}
-
-	max_readahead_pages = bytes / PAGE_CACHE_SIZE;
-	default_backing_dev_info.ra_pages = max_readahead_pages;
-	return 0;
-}
-
-early_param("readahead", readahead);
+#include "internal.h"
 
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has
@@ -175,8 +149,7 @@ out:
  *
  * Returns the number of pages requested, or the maximum amount of I/O allowed.
  */
-static int
-__do_page_cache_readahead(struct address_space *mapping, struct file *filp,
+int __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 			pgoff_t offset, unsigned long nr_to_read,
 			unsigned long lookahead_size)
 {
@@ -274,23 +247,7 @@ unsigned long max_sane_readahead(unsigned long nr)
 }
 
 /*
- * Submit IO for the read-ahead request in file_ra_state.
- */
-unsigned long ra_submit(struct file_ra_state *ra,
-		       struct address_space *mapping, struct file *filp)
-{
-	int actual;
-
-	actual = __do_page_cache_readahead(mapping, filp,
-					ra->start, ra->size, ra->async_size);
-
-	return actual;
-}
-
-/*
  * Set the initial window size, round to next power of 2 and square
- * Small size is not dependant on max value - only a one-page read is regarded
- * as small.
  * for small size, x 4 for medium, and x 2 for large
  * for 128k (32 page) max ra
  * 1-8 page = 32k initial, > 8 page = 128k initial
@@ -299,7 +256,7 @@ static unsigned long get_init_ra_size(unsigned long size, unsigned long max)
 {
 	unsigned long newsize = roundup_pow_of_two(size);
 
-	if (newsize <= 1)
+	if (newsize <= max / 32)
 		newsize = newsize * 4;
 	else if (newsize <= max / 4)
 		newsize = newsize * 2;
