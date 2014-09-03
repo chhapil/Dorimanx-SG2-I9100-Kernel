@@ -1327,9 +1327,9 @@ static int s6e88a0_probe(struct device *dev)
 	if (ret < 0)
 		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
-	/* ret = device_create_file(&lcd->ld->dev, &dev_attr_color_coordinate);
+	ret = device_create_file(&lcd->ld->dev, &dev_attr_color_coordinate);
 	if (ret < 0)
-		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__); */
+		dev_err(&lcd->ld->dev, "failed to add sysfs entries, %d\n", __LINE__);
 
 	ret = device_create_file(&lcd->ld->dev, &dev_attr_manufacture_date);
 	if (ret < 0)

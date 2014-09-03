@@ -128,5 +128,4 @@ static inline void atomic_or(int i, atomic_t *v)
 #ifdef CONFIG_GENERIC_ATOMIC64
 #include <asm-generic/atomic64.h>
 #endif
-
 #endif /* _LINUX_ATOMIC_H */
