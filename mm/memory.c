@@ -60,7 +60,6 @@
 #include <linux/migrate.h>
 #include <linux/string.h>
 #include <linux/dma-debug.h>
-#include <linux/debugfs.h>
 
 #include <asm/io.h>
 #include <asm/pgalloc.h>
@@ -1321,9 +1320,9 @@ static void unmap_single_vma(struct mmu_gather *tlb,
 			 * It is undesirable to test vma->vm_file as it
 			 * should be non-null for valid hugetlb area.
 			 * However, vm_file will be NULL in the error
-			 * cleanup path of mmap_region. When
+			 * cleanup path of do_mmap_pgoff. When
 			 * hugetlbfs ->mmap method fails,
-			 * mmap_region() nullifies vma->vm_file
+			 * do_mmap_pgoff() nullifies vma->vm_file
 			 * before calling this function to clean up.
 			 * Since no pte has actually been setup, it is
 			 * safe to do nothing in this case.
@@ -1706,6 +1705,15 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 
 	VM_BUG_ON(!!pages != !!(gup_flags & FOLL_GET));
 
+	/* 
+	 * Require read or write permissions.
+	 * If FOLL_FORCE is set, we only require the "MAY" flags.
+	 */
+	vm_flags  = (gup_flags & FOLL_WRITE) ?
+			(VM_WRITE | VM_MAYWRITE) : (VM_READ | VM_MAYREAD);
+	vm_flags &= (gup_flags & FOLL_FORCE) ?
+			(VM_MAYREAD | VM_MAYWRITE) : (VM_READ | VM_WRITE);
+
 	/*
 	 * If FOLL_FORCE and FOLL_NUMA are both set, handle_mm_fault
 	 * would be called on PROT_NONE ranges. We must never invoke
@@ -1733,7 +1741,7 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 
 			/* user gate pages are read-only */
 			if (gup_flags & FOLL_WRITE)
-				goto efault;
+				return i ? : -EFAULT;
 			if (pg > TASK_SIZE)
 				pgd = pgd_offset_k(pg);
 			else
@@ -1743,12 +1751,12 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			BUG_ON(pud_none(*pud));
 			pmd = pmd_offset(pud, pg);
 			if (pmd_none(*pmd))
-				goto efault;
+				return i ? : -EFAULT;
 			VM_BUG_ON(pmd_trans_huge(*pmd));
 			pte = pte_offset_map(pmd, pg);
 			if (pte_none(*pte)) {
 				pte_unmap(pte);
-				goto efault;
+				return i ? : -EFAULT;
 			}
 			vma = get_gate_vma(mm);
 			if (pages) {
@@ -1761,7 +1769,7 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 						page = pte_page(*pte);
 					else {
 						pte_unmap(pte);
-						goto efault;
+						return i ? : -EFAULT;
 					}
 				}
 				pages[i] = page;
@@ -1772,42 +1780,10 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			goto next_page;
 		}
 
-		if (!vma)
-			goto efault;
-		vm_flags = vma->vm_flags;
-		if (vm_flags & (VM_IO | VM_PFNMAP))
-			goto efault;
-
-		if (gup_flags & FOLL_WRITE) {
-			if (!(vm_flags & VM_WRITE)) {
-				if (!(gup_flags & FOLL_FORCE))
-					goto efault;
-				/*
-				 * We used to let the write,force case do COW
-				 * in a VM_MAYWRITE VM_SHARED !VM_WRITE vma, so
-				 * ptrace could set a breakpoint in a read-only
-				 * mapping of an executable, without corrupting
-				 * the file (yet only when that file had been
-				 * opened for writing!).  Anon pages in shared
-				 * mappings are surprising: now just reject it.
-				 */
-				if (!is_cow_mapping(vm_flags)) {
-					WARN_ON_ONCE(vm_flags & VM_MAYWRITE);
-					goto efault;
-				}
-			}
-		} else {
-			if (!(vm_flags & VM_READ)) {
-				if (!(gup_flags & FOLL_FORCE))
-					goto efault;
-				/*
-				 * Is there actually any vma we can reach here
-				 * which does not have VM_MAYREAD set?
-				 */
-				if (!(vm_flags & VM_MAYREAD))
-					goto efault;
-			}
-		}
+		if (!vma ||
+		    (vma->vm_flags & (VM_IO | VM_PFNMAP)) ||
+		    !(vm_flags & vma->vm_flags))
+			return i ? : -EFAULT;
 
 		if (is_vm_hugetlb_page(vma)) {
 			i = follow_hugetlb_page(mm, vma, pages, vmas,
@@ -1861,7 +1837,7 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 							return -EFAULT;
 					}
 					if (ret & VM_FAULT_SIGBUS)
-						goto efault;
+						return i ? i : -EFAULT;
 					BUG();
 				}
 
@@ -1919,8 +1895,6 @@ next_page:
 		} while (nr_pages && start < vma->vm_end);
 	} while (nr_pages);
 	return i;
-efault:
-	return i ? : -EFAULT;
 }
 EXPORT_SYMBOL(__get_user_pages);
 
@@ -1988,8 +1962,9 @@ int fixup_user_fault(struct task_struct *tsk, struct mm_struct *mm,
  * @start:	starting user address
  * @nr_pages:	number of pages from start to pin
  * @write:	whether pages will be written to by the caller
- * @force:	whether to force access even when user mapping is currently
- *		protected (but never forces write access to shared mapping).
+ * @force:	whether to force write access even if user mapping is
+ *		readonly. This will result in the page being COWed even
+ *		in MAP_SHARED mappings. You do not want this.
  * @pages:	array that receives pointers to the pages pinned.
  *		Should be at least nr_pages long. Or NULL, if caller
  *		only intends to ensure the pages are faulted in.
@@ -2782,7 +2757,7 @@ reuse:
 		 */
 		if (!page_mkwrite) {
 			wait_on_page_locked(dirty_page);
-			set_page_dirty_balance(dirty_page);
+			set_page_dirty_balance(dirty_page, page_mkwrite);
 			/* file_update_time outside page_lock */
 			if (vma->vm_file)
 				file_update_time(vma->vm_file);
@@ -2828,7 +2803,7 @@ gotten:
 	}
 	__SetPageUptodate(new_page);
 
-	if (mem_cgroup_charge_anon(new_page, mm, GFP_KERNEL))
+	if (mem_cgroup_newpage_charge(new_page, mm, GFP_KERNEL))
 		goto oom_free_new;
 
 	mmun_start  = address & PAGE_MASK;
@@ -3162,7 +3137,7 @@ static int do_swap_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	mem_cgroup_commit_charge_swapin(page, ptr);
 
 	swap_free(entry);
-	if (vm_swap_full() || (vma->vm_flags & VM_LOCKED) || PageMlocked(page))
+	if ((vma->vm_flags & VM_LOCKED) || PageMlocked(page))
 		try_to_free_swap(page);
 	unlock_page(page);
 	if (page != swapcache) {
@@ -3281,7 +3256,7 @@ static int do_anonymous_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	 */
 	__SetPageUptodate(page);
 
-	if (mem_cgroup_charge_anon(page, mm, GFP_KERNEL))
+	if (mem_cgroup_newpage_charge(page, mm, GFP_KERNEL))
 		goto oom_free_page;
 
 	entry = mk_pte(page, vma->vm_page_prot);
@@ -3343,22 +3318,7 @@ static int __do_fault(struct vm_area_struct *vma, unsigned long address,
 	return ret;
 }
 
-/**
- * do_set_pte - setup new PTE entry for given page and add reverse page mapping.
- *
- * @vma: virtual memory area
- * @address: user virtual address
- * @page: page to map
- * @pte: pointer to target page table entry
- * @write: true, if new entry is writable
- * @anon: true, if it's anonymous page
- *
- * Caller must hold page table lock relevant for @pte.
- *
- * Target users are page handler itself and implementations of
- * vm_ops->map_pages.
- */
-void do_set_pte(struct vm_area_struct *vma, unsigned long address,
+static void do_set_pte(struct vm_area_struct *vma, unsigned long address,
 		struct page *page, pte_t *pte, bool write, bool anon)
 {
 	pte_t entry;
@@ -3382,105 +3342,6 @@ void do_set_pte(struct vm_area_struct *vma, unsigned long address,
 	update_mmu_cache(vma, address, pte);
 }
 
-#define FAULT_AROUND_ORDER 4
-
-#ifdef CONFIG_DEBUG_FS
-static unsigned int fault_around_order = FAULT_AROUND_ORDER;
-
-static int fault_around_order_get(void *data, u64 *val)
-{
-	*val = fault_around_order;
-	return 0;
-}
-
-static int fault_around_order_set(void *data, u64 val)
-{
-	BUILD_BUG_ON((1UL << FAULT_AROUND_ORDER) > PTRS_PER_PTE);
-	if (1UL << val > PTRS_PER_PTE)
-		return -EINVAL;
-	fault_around_order = val;
-	return 0;
-}
-DEFINE_SIMPLE_ATTRIBUTE(fault_around_order_fops,
-		fault_around_order_get, fault_around_order_set, "%llu\n");
-
-static int __init fault_around_debugfs(void)
-{
-	void *ret;
-
-	ret = debugfs_create_file("fault_around_order",	0644, NULL, NULL,
-			&fault_around_order_fops);
-	if (!ret)
-		pr_warn("Failed to create fault_around_order in debugfs");
-	return 0;
-}
-late_initcall(fault_around_debugfs);
-
-static inline unsigned long fault_around_pages(void)
-{
-	return 1UL << fault_around_order;
-}
-
-static inline unsigned long fault_around_mask(void)
-{
-	return ~((1UL << (PAGE_SHIFT + fault_around_order)) - 1);
-}
-#else
-static inline unsigned long fault_around_pages(void)
-{
-	unsigned long nr_pages;
-
-	nr_pages = 1UL << FAULT_AROUND_ORDER;
-	BUILD_BUG_ON(nr_pages > PTRS_PER_PTE);
-	return nr_pages;
-}
-
-static inline unsigned long fault_around_mask(void)
-{
-	return ~((1UL << (PAGE_SHIFT + FAULT_AROUND_ORDER)) - 1);
-}
-#endif
-
-static void do_fault_around(struct vm_area_struct *vma, unsigned long address,
-		pte_t *pte, pgoff_t pgoff, unsigned int flags)
-{
-	unsigned long start_addr;
-	pgoff_t max_pgoff;
-	struct vm_fault vmf;
-	int off;
-
-	start_addr = max(address & fault_around_mask(), vma->vm_start);
-	off = ((address - start_addr) >> PAGE_SHIFT) & (PTRS_PER_PTE - 1);
-	pte -= off;
-	pgoff -= off;
-
-	/*
-	 *  max_pgoff is either end of page table or end of vma
-	 *  or fault_around_pages() from pgoff, depending what is neast.
-	 */
-	max_pgoff = pgoff - ((start_addr >> PAGE_SHIFT) & (PTRS_PER_PTE - 1)) +
-		PTRS_PER_PTE - 1;
-	max_pgoff = min3(max_pgoff, vma_pages(vma) + vma->vm_pgoff - 1,
-			pgoff + fault_around_pages() - 1);
-
-	/* Check if it makes any sense to call ->map_pages */
-	while (!pte_none(*pte)) {
-		if (++pgoff > max_pgoff)
-			return;
-		start_addr += PAGE_SIZE;
-		if (start_addr >= vma->vm_end)
-			return;
-		pte++;
-	}
-
-	vmf.virtual_address = (void __user *) start_addr;
-	vmf.pte = pte;
-	vmf.pgoff = pgoff;
-	vmf.max_pgoff = max_pgoff;
-	vmf.flags = flags;
-	vma->vm_ops->map_pages(vma, &vmf);
-}
-
 static int do_read_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 		unsigned long address, pmd_t *pmd,
 		pgoff_t pgoff, unsigned int flags, pte_t orig_pte)
@@ -3488,20 +3349,7 @@ static int do_read_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	struct page *fault_page;
 	spinlock_t *ptl;
 	pte_t *pte;
-	int ret = 0;
-
-	/*
-	 * Let's call ->map_pages() first and use ->fault() as fallback
-	 * if page by the offset is not ready to be mapped (cold cache or
-	 * something).
-	 */
-	if (vma->vm_ops->map_pages) {
-		pte = pte_offset_map_lock(mm, pmd, address, &ptl);
-		do_fault_around(vma, address, pte, pgoff, flags);
-		if (!pte_same(*pte, orig_pte))
-			goto unlock_out;
-		pte_unmap_unlock(pte, ptl);
-	}
+	int ret;
 
 	ret = __do_fault(vma, address, pgoff, flags, &fault_page);
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE | VM_FAULT_RETRY)))
@@ -3515,9 +3363,8 @@ static int do_read_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 		return ret;
 	}
 	do_set_pte(vma, address, fault_page, pte, false, false);
-	unlock_page(fault_page);
-unlock_out:
 	pte_unmap_unlock(pte, ptl);
+	unlock_page(fault_page);
 	return ret;
 }
 
@@ -3537,7 +3384,7 @@ static int do_cow_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	if (!new_page)
 		return VM_FAULT_OOM;
 
-	if (mem_cgroup_charge_anon(new_page, mm, GFP_KERNEL)) {
+	if (mem_cgroup_newpage_charge(new_page, mm, GFP_KERNEL)) {
 		page_cache_release(new_page);
 		return VM_FAULT_OOM;
 	}
