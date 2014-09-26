@@ -131,6 +131,7 @@ static int mmc_decode_cid(struct mmc_card *card)
 		card->cid.prod_name[4]	= UNSTUFF_BITS(resp, 64, 8);
 		card->cid.prod_name[5]	= UNSTUFF_BITS(resp, 56, 8);
 		card->cid.prod_rev	= UNSTUFF_BITS(resp, 48, 8);
+		card->cid.fwrev		= card->cid.prod_rev; /* duplicates cid.prod_rev */
 		card->cid.serial	= UNSTUFF_BITS(resp, 16, 32);
 		card->cid.month		= UNSTUFF_BITS(resp, 12, 4);
 		card->cid.year		= UNSTUFF_BITS(resp, 8, 4) + 1997;
