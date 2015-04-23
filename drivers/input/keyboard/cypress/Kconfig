@@ -1,0 +1,30 @@
+#
+# Cypress touchkey configuration
+#
+
+config KEYBOARD_CYPRESS_GM
+	tristate "Cypress touchkey support for GM BLN"
+	default y
+	select TOUCHKEY_BLN
+	---help---
+	  Say Y here to enable the cypress touchkey.
+
+config KEYBOARD_CYPRESS_AOKP
+        tristate "Cypress touchkey support for AOKP"
+	depends on !KEYBOARD_CYPRESS_GM
+        ---help---
+          Say Y here to enable the cypress touchkey.
+
+config TOUCHKEY_BLN
+	bool "BLN Support"
+	depends on KEYBOARD_CYPRESS_GM
+	---help---
+	  BLN support.
+
+config TARGET_CM_KERNEL
+	bool "Enable settings for CyanogenMod ROM"
+	depends on KEYBOARD_CYPRESS_AOKP
+	---help---
+	  This option configures BLN that works with
+	  CyanogenMod ROM settings and options.
+

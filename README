@@ -1,0 +1,739 @@
+                       This is Dorimanx Kernel 9.X/8.x
+
+# You can build this kernel easily on BBQLinux (http://www.bbqlinux.org/), an Arch based distro for Android Devs.
+# Install it and simply do these commands:
+
+# Use 64BIT installation or build will fail!!!
+
+# To compile you need:
+sudo pacman -S bc
+
+# set your shell to bash
+chsh -s /bin/bash YOUR-USER(best if it will be root)
+
+# set permissions on temp!
+sudo chmod -R 777 /tmp
+
+# Clean TMP
+sudo rm -rf /tmp/*
+
+# To clone this repo
+mkdir ~/samsung-i9100
+cd ~/samsung-i9100
+git clone https://github.com/dorimanx/Dorimanx-SG2-I9100-Kernel.git
+git clone https://github.com/dorimanx/initramfs3.git
+
+# allow access for login as root to ssh
+vi /etc/ssh/sshd_config
+
+# look for
+#PermitRootLogin yes
+
+# uncomment
+PermitRootLogin yes
+# save file. (shift :wq)
+
+# To enable SSH access to machine:
+# open terminal
+sudo systemctl start sshd
+
+# to start it, and to make it start always at boot
+sudo systemctl enable sshd.service
+# ssh is online now :)
+
+# Install normal text editor!
+sudo pacman -S vim
+export EDITOR=/usr/bin/vi
+sudo rm /usr/bin/vi
+sudo cp /usr/bin/vim /usr/bin/vi
+echo "syntax on" > $HOME/.vimrc
+echo "colo elflord" >> $HOME/.vimrc
+echo "export EDITOR=vi" >> ~/.bashrc
+
+# setup git to help you to work :)
+cd ~/samsung-i9100/Dorimanx-SG2-I9100-Kernel
+# tell git who are you!
+git config --global user.name John Doe
+git config --global user.email johndoe@example.com
+# set helpers
+git config --global push.default simple
+git config --global alias.last 'log -1 HEAD'
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.hard 'reset --hard'
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.st status
+git config --global color.diff auto
+git config --global color.ui auto
+git config --global color.status auto
+git config --global color.branch auto
+
+# check all config
+git config -l
+# set auto complite commands for git when using bash shell
+cp /usr/share/git/completion/git-completion.bash ~/.git-completion.bash
+vi ~/.bashrc
+# add at the bottom if file
+source ~/.git-completion.bash
+# save! shift :wq
+# to make it work exit and loggin to ssh/terminal again.
+
+# To start the build
+#********************************************
+#!!!!Login to SSH/Terminal as ROOT user!!!!!!
+#********************************************
+# now if you are ROOT, then build, if you are not ROOT, go away.
+
+cd ~/samsung-i9100/Dorimanx-SG2-I9100-Kernel
+sh load_config.sh
+sh build_kernel.sh
+
+# Enjoy!
+
+==================================================================
+
+# This kernel is compiled on Ubuntu Server/Desktop 12.04 64BIT ONLY!!!.
+# Kernel not support 32BIT!
+
+# It is important to keep this one, otherwise the kernel will be compiled
+# but it won't boot as the script will fire errors.
+
+# It is important to install this otherwise the linaro GCC will fire errors
+sudo apt-get install ia32-libs lib32ncurses5-dev ccache imagemagick libxml2-utils optipng zip tar bash vim
+
+# Set you ssh shell to bash
+chsh -s /bin/bash YOUR-USER(best if will be root)
+
+# set permissions on temp!
+sudo chmod -R 777 /tmp
+
+# Clean TMP
+sudo rm -rf /tmp/*
+
+# Install normal text editor!
+export EDITOR=/usr/bin/vim
+update-alternatives --config editor
+# choose  /usr/bin/vim.basic
+echo "syntax on" > $HOME/.vimrc
+echo "colo elflord" >> $HOME/.vimrc
+
+# To clone this repo
+sudo apt-get install git
+mkdir ~/samsung-i9100
+cd ~/samsung-i9100
+git clone https://github.com/dorimanx/Dorimanx-SG2-I9100-Kernel.git
+git clone https://github.com/dorimanx/initramfs3.git
+
+# setup git to help you to work :)
+cd ~/samsung-i9100/Dorimanx-SG2-I9100-Kernel
+# tell git who are you!
+git config --global user.name John Doe
+git config --global user.email johndoe@example.com
+# set helpers
+git config --global push.default simple
+git config --global alias.last 'log -1 HEAD'
+git config --global alias.unstage 'reset HEAD --'
+git config --global alias.hard 'reset --hard'
+git config --global alias.co checkout
+git config --global alias.br branch
+git config --global alias.ci commit
+git config --global alias.st status
+git config --global color.diff auto
+git config --global color.ui auto
+git config --global color.status auto
+git config --global color.branch auto
+
+# check all config
+git config -l
+# set auto complite commands for git when using bash shell
+cp /usr/share/git/completion/git-completion.bash ~/.git-completion.bash
+vi ~/.bashrc
+# add at the bottom if file
+source ~/.git-completion.bash
+# save! shift :wq
+# to make it work exit and loggin to ssh/terminal again.
+
+# To start the build
+#***********************************
+#!!!!Login to SSH as ROOT user!!!!!!
+#***********************************
+
+# now if you are ROOT, then build, if you are not ROOT, go away.
+cd ~/samsung-i9100/Dorimanx-SG2-I9100-Kernel
+sh load_config.sh
+sh build_kernel.sh
+
+==================================================================
+My info guide.
+
+How to cherry pick commits from other branch to yours.
+
+fetch new branch, checkout inside.
+
+git fetch git://github.com/dorimanx/Dorimanx-SG2-I9100-Kernel.git
+git checkout FETCH_HEAD
+
+now git log
+
+find the hash number of the oldest commit that you want and the newst commit that you want,
+it's a range of commits! :)
+
+now example! ( the .. from old to new is a must)
+rm -f *.patch  (clean all old junk)
+
+you must use commit hash -1 from commit that you want to start adding!
+just take commit that you have/not want as first!, git format-patch will start from next to one you put as the oldest.!
+
+then "OLD" + "NEW" are info, dont write.
+
+git format-patch "OLD" 177e5c7ce53b6d06b9ee3448c00215ba6d70ffc9..c87ade04d28d2024b8ed2000346aa568a07a7f0b "NEW"
+git checkout DESTINATION/YOUR branch.
+git am *.patch
+rm -f *.patch
+git push
+
+all done :)
+
+if git am fail to add patch, you can stop and try to fix the commit, that is another story :)
+
+=================================================================
+
+UNIX & Linux Shell Scripting Tutorial
+
+TOC | Introduction | Variables | If/Else | Looping | Cases | Functions | Search & Sort | Advanced | Forum
+
+If/Else
+
+In order for a script to be very useful, you will need to be able to test the conditions of variables. Most programming and scripting languages have some sort of if/else expression and so does the bourne shell. Unlike most other languages, spaces are very important when using an if statement. Let's do a simple script that will ask a user for a password before allowing him to continue. This is obviously not how you would implement such security in a real system, but it will make a good example of using if and else statements.
+
+#!/bin/sh
+# This is some secure program that uses security.
+
+VALID_PASSWORD="secret" #this is our password.
+
+echo "Please enter the password:"
+read PASSWORD
+
+if [ "$PASSWORD" == "$VALID_PASSWORD" ]; then
+	echo "You have access!"
+else
+	echo "ACCESS DENIED!"
+fi
+
+Remember that the spacing is very important in the if statement. Notice that the termination of the if statement is fi. You will need to use the fi statement to terminate an if whether or not use use an else as well. You can also replace the "==" with "!=" to test if the variables are NOT equal. There are other tokens that you can put in place of the "==" for other types of tests. The following table shows the different expressions allowed.
+Comparisons:
+-eq	equal to
+-ne	not equal to
+-lt	less than
+-le	less than or equal to
+-gt	greater than
+-ge	greater than or equal to
+
+File Operations:
+-s	file exists and is not empty
+-f	file exists and is not a directory
+-d	directory exists
+-x	file is executable
+-w	file is writable
+-r	file is readable
+
+Let's try using a couple of these in a script. This next script will ask for a user name, if there is not a file that exists with the name "username_DAT", the script will prompt the user for their age, it will then make sure that they are old enough to use this program and then it will write their age to a file with the name "username_DAT". If the file already exists, it will just display the age of the user.
+
+#!/bin/sh
+
+# Prompt for a user name...
+echo "Please enter your name:"
+read USERNAME
+
+# Check for the file.
+if [ -s ${USERNAME}_DAT ]; then
+        # Read the age from the file.
+        AGE=`cat ${USERNAME}_DAT`
+        echo "You are $AGE years old!"
+else
+        # Ask the user for his/her age
+        echo "How old are you?"
+        read AGE
+
+	if [ "$AGE" -le 2 ]; then
+		echo "You are too young!"
+	else
+		if [ "$AGE" -ge 100 ]; then
+			echo "You are too old!"
+		else
+			# Write the age to a new file.
+			echo $AGE > ${USERNAME}_DAT
+		fi
+	fi
+fi
+
+Run this program a couple of times. First run it and give it the user name of "john". When it asks for an age, enter the age "1". Notice that it will say that you are too you and then exit. Now run the program again with the name "john" and the age 200. This time the script will tell you that you are too old and exit. Now run the the script again with the name of "john", enter the age 30. The script exits normally this time, the program created a file called "john_DAT" which contains the text "30". Finally run the program one more time and give it the name "john". This time it will not prompt you to enter an age, instead it will read the age from a file and say "Your are 30 years old!".
+
+We introduced something else new in this script. On line 10 of the file, we see the code:
+
+	AGE=`cat ${USERNAME}_DAT`
+
+This is how you execute a command and put the text output from the command into a variable. The unix command cat reads the file named ${USERNAME}_DAT and outputs it to the console. Instead of putting it to the console in our script, we wrap the command with the character `, this puts the text into our variable AGE.
+
+You can test multiple expressions at once by using the || (or) operator or the && (and) operator. This can save you from writing extra code to nest if statements. The above code has a nested if statement where it checks if the age is greater than or equal to 100. This could be changed as well by using elif (else if). The structure of elif is the same as the structure of if, we will use it in an example below. In this example, we will check for certain age ranges. If you are less than 20 or greater than 50, you are out of the age range. If you are between 20 and 30 you are in your 20's and so on.
+
+#!/bin/sh
+
+# Prompt for a user name...
+echo "Please enter your age:"
+read AGE
+
+if [ "$AGE" -lt 20 ] || [ "$AGE" -ge 50 ]; then
+	echo "Sorry, you are out of the age range."
+elif [ "$AGE" -ge 20 ] && [ "$AGE" -lt 30 ]; then
+	echo "You are in your 20s"
+elif [ "$AGE" -ge 30 ] && [ "$AGE" -lt 40 ]; then
+	echo "You are in your 30s"
+elif [ "$AGE" -ge 40 ] && [ "$AGE" -lt 50 ]; then
+	echo "You are in your 40s"
+fi
+
+
+
+
+More will be added later.
+
+=================================================================
+
+Kernel is updated to 3.12.Y and beyond.(hybrid)(we have 90% from 3.12.Y kernel!)
+This is JB Tuned Kernel only! not supporting any 2.x.x/4.0.x roms!
+Dual CPU support
+Default CPU governor: HYPER
+CFS CPU SCHEDULER Tweaks.
+Default CPU frequency: 200-1200 MHz (MAX OC up to 1.6Ghz speed!)
+Kernel Support STweaks and 5 Profiles.
+Overclocking to 1600 MHz. (via ANY CPU Tweak Apps or STweaks)
+Kernel support 16 CPU steps! 1600Mhz->100Mhz by static default!
+You can set MIN/MAX CPU Freq in STweaks app! + lots of CPU tweaks.
+Kernel will sleep in deep sleep on 200Mhz->800Mhz as Samsung requesting to prevent SOD.
+Support undervolt/overvolting via sysfs interface/apps interface. and STweaks (850-1500mV) (all set to best)
+Be very careful with voltage settings! (all set already)
+Default I/O Scheduling: ROW
+More I/O Scheduling present in kernel: DEADLINE, VR, NOOP, FIFO, CFQ, SIO, ZEN
+Native USB Tethering.
+Native Wi-Fi Tethering
+File systems support: Ext3/4, FAT32, NFS, CIFS, NTFS
+Added tweaks to increase I/O Speed.
+Added tweaks to increase CPU speed
+Removed all the debuggers to free kernel from unneeded jobs, and logs.
+More Govs present, conservative, performance, pegasusq, nightmare, zzmoove, ondemand(default sleep gov), sleepy.
+ZRAM SWAP add more 150/300/600MB compressed RAM, activated by STweaks, set to off by default.
+Tweak camera (better picks quality)
+Kernel Include Siyah Recovery with Dual ROM support!
+In Recovery you have section to select kernel profile. Performance, default, battery, the default is DEFAULT.
+Kernel will Auto ROOT your device!
+You can disable ROOT in STweaks app!
+Tuned for I/O Mega Speed SQLite is injected to ROM after install, only for CM10.1 or AOKP and JB SAMMY ROMS, will NOT be injected to cMIUI.
+BLN by GM! lights time out, and blink/breathing effect, see STweaks BLN tab to activate!
+New Kernel Management app STweaks by GM! installed with kernel.
+BLN without Wakelock to save battery when BLN active till timed out. by GM.
+Touch Keys Light change with the screen brightness! by GM.
+Massive script for kernel/ROM management made by Voku and me
+It's will work by auto and set lots of tweaks: NET tweaks, GPU tweaks, CPU management, Deep Sleep Tuning, Charging states, and more!
+It's name is cortexbrain-tune.sh
+WE SAFE (MMC_CAP_ERASE not present) in kernel MMC Code!
+MMC code merged with SAMMY Update 7
+FM-RADIO WORKING! (you need Spirit FM PAID!!!!) or Sammy ROM with FM APP.
+Touch screen color + touch thresholds are in STweaks,
+Kernel Cleaning Script is build IN! by VOKU.
+BT Support for SAMMY 4.0.4 ported by GM! + BT driver from SAMMY JB LEAK
+Video(GPU) + Camera Driver from SAMMY JB/CM10.1 + patches
+WIFI Driver 1.61.47
+Modem Driver from SAMMY JB SOURCE
+SMP Processor code updated from Kernel 3.10.Y
+RCU + SRCU Processor code updated from Kernel 3.10.Y
+Kernel Code for on screen gestures by Tungstwenty fixed by MARIO1968
+EXT4 Code merged with lots of updates from 3.6.Y kernel
+SLUB fully merged with 3.9.Y Google Android kernel
+SCHED CORE fully merged with 3.10.Y kernel.
+Mem merged with 3.9.Y Google Android kernel.
+VFP updated to MAX from 3.10.Y
+Slide2Wake by FLUXI, (swipe from left to right on turned off screen to wakeup device, tweak can be turned on/off in STweaks, this mod use 5% battery! (Modded by GM for less battery drain)
+Sound boost controls by FLUXI in STweaks.
+New Mali V2 Video Driver combined with old to support JB STOCK in one kernel(8.X branch) by Gokhanmoral/me/CM-TEAM!
+In 9.X branch we have MALIv2 ONLY video driver for CM/AOKP new ROMS.
+Added mdnie interface and made hardcore.s sharpness tweaks optional by GM!
+5 GPU FREQ Steps from 108Mhz to 520Mhz by GM!
+Ultra KSM from 3.9.y kernel.
+
+	Linux kernel release 3.x <http://kernel.org/>
+
+These are the release notes for Linux version 3.  Read them carefully,
+as they tell you what this is all about, explain how to install the
+kernel, and what to do if something goes wrong.
+
+WHAT IS LINUX?
+
+  Linux is a clone of the operating system Unix, written from scratch by
+  Linus Torvalds with assistance from a loosely-knit team of hackers across
+  the Net. It aims towards POSIX and Single UNIX Specification compliance.
+
+  It has all the features you would expect in a modern fully-fledged Unix,
+  including true multitasking, virtual memory, shared libraries, demand
+  loading, shared copy-on-write executables, proper memory management,
+  and multistack networking including IPv4 and IPv6.
+
+  It is distributed under the GNU General Public License - see the
+  accompanying COPYING file for more details.
+
+ON WHAT HARDWARE DOES IT RUN?
+
+  Although originally developed first for 32-bit x86-based PCs (386 or higher),
+  today Linux also runs on (at least) the Compaq Alpha AXP, Sun SPARC and
+  UltraSPARC, Motorola 68000, PowerPC, PowerPC64, ARM, Hitachi SuperH, Cell,
+  IBM S/390, MIPS, HP PA-RISC, Intel IA-64, DEC VAX, AMD x86-64, AXIS CRIS,
+  Xtensa, Tilera TILE, AVR32 and Renesas M32R architectures.
+
+  Linux is easily portable to most general-purpose 32- or 64-bit architectures
+  as long as they have a paged memory management unit (PMMU) and a port of the
+  GNU C compiler (gcc) (part of The GNU Compiler Collection, GCC). Linux has
+  also been ported to a number of architectures without a PMMU, although
+  functionality is then obviously somewhat limited.
+  Linux has also been ported to itself. You can now run the kernel as a
+  userspace application - this is called UserMode Linux (UML).
+
+DOCUMENTATION:
+
+ - There is a lot of documentation available both in electronic form on
+   the Internet and in books, both Linux-specific and pertaining to
+   general UNIX questions.  I'd recommend looking into the documentation
+   subdirectories on any Linux FTP site for the LDP (Linux Documentation
+   Project) books.  This README is not meant to be documentation on the
+   system: there are much better sources available.
+
+ - There are various README files in the Documentation/ subdirectory:
+   these typically contain kernel-specific installation notes for some
+   drivers for example. See Documentation/00-INDEX for a list of what
+   is contained in each file.  Please read the Changes file, as it
+   contains information about the problems, which may result by upgrading
+   your kernel.
+
+ - The Documentation/DocBook/ subdirectory contains several guides for
+   kernel developers and users.  These guides can be rendered in a
+   number of formats:  PostScript (.ps), PDF, HTML, & man-pages, among others.
+   After installation, "make psdocs", "make pdfdocs", "make htmldocs",
+   or "make mandocs" will render the documentation in the requested format.
+
+INSTALLING the kernel source:
+
+ - If you install the full sources, put the kernel tarball in a
+   directory where you have permissions (eg. your home directory) and
+   unpack it:
+
+		gzip -cd linux-3.X.tar.gz | tar xvf -
+
+   or
+		bzip2 -dc linux-3.X.tar.bz2 | tar xvf -
+
+
+   Replace "XX" with the version number of the latest kernel.
+
+   Do NOT use the /usr/src/linux area! This area has a (usually
+   incomplete) set of kernel headers that are used by the library header
+   files.  They should match the library, and not get messed up by
+   whatever the kernel-du-jour happens to be.
+
+ - You can also upgrade between 3.x releases by patching.  Patches are
+   distributed in the traditional gzip and the newer bzip2 format.  To
+   install by patching, get all the newer patch files, enter the
+   top level directory of the kernel source (linux-3.x) and execute:
+
+		gzip -cd ../patch-3.x.gz | patch -p1
+
+   or
+		bzip2 -dc ../patch-3.x.bz2 | patch -p1
+
+   (repeat xx for all versions bigger than the version of your current
+   source tree, _in_order_) and you should be ok.  You may want to remove
+   the backup files (xxx~ or xxx.orig), and make sure that there are no
+   failed patches (xxx# or xxx.rej). If there are, either you or me has
+   made a mistake.
+
+   Unlike patches for the 3.x kernels, patches for the 3.x.y kernels
+   (also known as the -stable kernels) are not incremental but instead apply
+   directly to the base 3.x kernel.  Please read
+   Documentation/applying-patches.txt for more information.
+
+   Alternatively, the script patch-kernel can be used to automate this
+   process.  It determines the current kernel version and applies any
+   patches found.
+
+		linux/scripts/patch-kernel linux
+
+   The first argument in the command above is the location of the
+   kernel source.  Patches are applied from the current directory, but
+   an alternative directory can be specified as the second argument.
+
+ - If you are upgrading between releases using the stable series patches
+   (for example, patch-3.x.y), note that these "dot-releases" are
+   not incremental and must be applied to the 3.x base tree. For
+   example, if your base kernel is 3.0 and you want to apply the
+   3.0.3 patch, you do not and indeed must not first apply the
+   3.0.1 and 3.0.2 patches. Similarly, if you are running kernel
+   version 3.0.2 and want to jump to 3.0.3, you must first
+   reverse the 3.0.2 patch (that is, patch -R) _before_ applying
+   the 3.0.3 patch.
+   You can read more on this in Documentation/applying-patches.txt
+
+ - Make sure you have no stale .o files and dependencies lying around:
+
+		cd linux
+		make mrproper
+
+   You should now have the sources correctly installed.
+
+SOFTWARE REQUIREMENTS
+
+   Compiling and running the 3.x kernels requires up-to-date
+   versions of various software packages.  Consult
+   Documentation/Changes for the minimum version numbers required
+   and how to get updates for these packages.  Beware that using
+   excessively old versions of these packages can cause indirect
+   errors that are very difficult to track down, so don't assume that
+   you can just update packages when obvious problems arise during
+   build or operation.
+
+BUILD directory for the kernel:
+
+   When compiling the kernel all output files will per default be
+   stored together with the kernel source code.
+   Using the option "make O=output/dir" allow you to specify an alternate
+   place for the output files (including .config).
+   Example:
+     kernel source code:	/usr/src/linux-3.N
+     build directory:		/home/name/build/kernel
+
+   To configure and build the kernel use:
+   cd /usr/src/linux-3.N
+   make O=/home/name/build/kernel menuconfig
+   make O=/home/name/build/kernel
+   sudo make O=/home/name/build/kernel modules_install install
+
+   Please note: If the 'O=output/dir' option is used then it must be
+   used for all invocations of make.
+
+CONFIGURING the kernel:
+
+   Do not skip this step even if you are only upgrading one minor
+   version.  New configuration options are added in each release, and
+   odd problems will turn up if the configuration files are not set up
+   as expected.  If you want to carry your existing configuration to a
+   new version with minimal work, use "make oldconfig", which will
+   only ask you for the answers to new questions.
+
+ - Alternate configuration commands are:
+	"make config"      Plain text interface.
+	"make menuconfig"  Text based color menus, radiolists & dialogs.
+	"make nconfig"     Enhanced text based color menus.
+	"make xconfig"     X windows (Qt) based configuration tool.
+	"make gconfig"     X windows (Gtk) based configuration tool.
+	"make oldconfig"   Default all questions based on the contents of
+			   your existing ./.config file and asking about
+			   new config symbols.
+	"make silentoldconfig"
+			   Like above, but avoids cluttering the screen
+			   with questions already answered.
+			   Additionally updates the dependencies.
+	"make defconfig"   Create a ./.config file by using the default
+			   symbol values from either arch/$ARCH/defconfig
+			   or arch/$ARCH/configs/${PLATFORM}_defconfig,
+			   depending on the architecture.
+	"make ${PLATFORM}_defconfig"
+			  Create a ./.config file by using the default
+			  symbol values from
+			  arch/$ARCH/configs/${PLATFORM}_defconfig.
+			  Use "make help" to get a list of all available
+			  platforms of your architecture.
+	"make allyesconfig"
+			   Create a ./.config file by setting symbol
+			   values to 'y' as much as possible.
+	"make allmodconfig"
+			   Create a ./.config file by setting symbol
+			   values to 'm' as much as possible.
+	"make allnoconfig" Create a ./.config file by setting symbol
+			   values to 'n' as much as possible.
+	"make randconfig"  Create a ./.config file by setting symbol
+			   values to random values.
+
+   You can find more information on using the Linux kernel config tools
+   in Documentation/kbuild/kconfig.txt.
+
+	NOTES on "make config":
+	- having unnecessary drivers will make the kernel bigger, and can
+	  under some circumstances lead to problems: probing for a
+	  nonexistent controller card may confuse your other controllers
+	- compiling the kernel with "Processor type" set higher than 386
+	  will result in a kernel that does NOT work on a 386.  The
+	  kernel will detect this on bootup, and give up.
+	- A kernel with math-emulation compiled in will still use the
+	  coprocessor if one is present: the math emulation will just
+	  never get used in that case.  The kernel will be slightly larger,
+	  but will work on different machines regardless of whether they
+	  have a math coprocessor or not.
+	- the "kernel hacking" configuration details usually result in a
+	  bigger or slower kernel (or both), and can even make the kernel
+	  less stable by configuring some routines to actively try to
+	  break bad code to find kernel problems (kmalloc()).  Thus you
+	  should probably answer 'n' to the questions for
+          "development", "experimental", or "debugging" features.
+
+COMPILING the kernel:
+
+ - Make sure you have at least gcc 3.2 available.
+   For more information, refer to Documentation/Changes.
+
+   Please note that you can still run a.out user programs with this kernel.
+
+ - Do a "make" to create a compressed kernel image. It is also
+   possible to do "make install" if you have lilo installed to suit the
+   kernel makefiles, but you may want to check your particular lilo setup first.
+
+   To do the actual install you have to be root, but none of the normal
+   build should require that. Don't take the name of root in vain.
+
+ - If you configured any of the parts of the kernel as `modules', you
+   will also have to do "make modules_install".
+
+ - Verbose kernel compile/build output:
+
+   Normally the kernel build system runs in a fairly quiet mode (but not
+   totally silent).  However, sometimes you or other kernel developers need
+   to see compile, link, or other commands exactly as they are executed.
+   For this, use "verbose" build mode.  This is done by inserting
+   "V=1" in the "make" command.  E.g.:
+
+	make V=1 all
+
+   To have the build system also tell the reason for the rebuild of each
+   target, use "V=2".  The default is "V=0".
+
+ - Keep a backup kernel handy in case something goes wrong.  This is
+   especially true for the development releases, since each new release
+   contains new code which has not been debugged.  Make sure you keep a
+   backup of the modules corresponding to that kernel, as well.  If you
+   are installing a new kernel with the same version number as your
+   working kernel, make a backup of your modules directory before you
+   do a "make modules_install".
+   Alternatively, before compiling, use the kernel config option
+   "LOCALVERSION" to append a unique suffix to the regular kernel version.
+   LOCALVERSION can be set in the "General Setup" menu.
+
+ - In order to boot your new kernel, you'll need to copy the kernel
+   image (e.g. .../linux/arch/i386/boot/bzImage after compilation)
+   to the place where your regular bootable kernel is found.
+
+ - Booting a kernel directly from a floppy without the assistance of a
+   bootloader such as LILO, is no longer supported.
+
+   If you boot Linux from the hard drive, chances are you use LILO which
+   uses the kernel image as specified in the file /etc/lilo.conf.  The
+   kernel image file is usually /vmlinuz, /boot/vmlinuz, /bzImage or
+   /boot/bzImage.  To use the new kernel, save a copy of the old image
+   and copy the new image over the old one.  Then, you MUST RERUN LILO
+   to update the loading map!! If you don't, you won't be able to boot
+   the new kernel image.
+
+   Reinstalling LILO is usually a matter of running /sbin/lilo.
+   You may wish to edit /etc/lilo.conf to specify an entry for your
+   old kernel image (say, /vmlinux.old) in case the new one does not
+   work.  See the LILO docs for more information.
+
+   After reinstalling LILO, you should be all set.  Shutdown the system,
+   reboot, and enjoy!
+
+   If you ever need to change the default root device, video mode,
+   ramdisk size, etc.  in the kernel image, use the 'rdev' program (or
+   alternatively the LILO boot options when appropriate).  No need to
+   recompile the kernel to change these parameters.
+
+ - Reboot with the new kernel and enjoy.
+
+IF SOMETHING GOES WRONG:
+
+ - If you have problems that seem to be due to kernel bugs, please check
+   the file MAINTAINERS to see if there is a particular person associated
+   with the part of the kernel that you are having trouble with. If there
+   isn't anyone listed there, then the second best thing is to mail
+   them to me (torvalds@linux-foundation.org), and possibly to any other
+   relevant mailing-list or to the newsgroup.
+
+ - In all bug-reports, *please* tell what kernel you are talking about,
+   how to duplicate the problem, and what your setup is (use your common
+   sense).  If the problem is new, tell me so, and if the problem is
+   old, please try to tell me when you first noticed it.
+
+ - If the bug results in a message like
+
+	unable to handle kernel paging request at address C0000010
+	Oops: 0002
+	EIP:   0010:XXXXXXXX
+	eax: xxxxxxxx   ebx: xxxxxxxx   ecx: xxxxxxxx   edx: xxxxxxxx
+	esi: xxxxxxxx   edi: xxxxxxxx   ebp: xxxxxxxx
+	ds: xxxx  es: xxxx  fs: xxxx  gs: xxxx
+	Pid: xx, process nr: xx
+	xx xx xx xx xx xx xx xx xx xx
+
+   or similar kernel debugging information on your screen or in your
+   system log, please duplicate it *exactly*.  The dump may look
+   incomprehensible to you, but it does contain information that may
+   help debugging the problem.  The text above the dump is also
+   important: it tells something about why the kernel dumped code (in
+   the above example it's due to a bad kernel pointer). More information
+   on making sense of the dump is in Documentation/oops-tracing.txt
+
+ - If you compiled the kernel with CONFIG_KALLSYMS you can send the dump
+   as is, otherwise you will have to use the "ksymoops" program to make
+   sense of the dump (but compiling with CONFIG_KALLSYMS is usually preferred).
+   This utility can be downloaded from
+   ftp://ftp.<country>.kernel.org/pub/linux/utils/kernel/ksymoops/ .
+   Alternately you can do the dump lookup by hand:
+
+ - In debugging dumps like the above, it helps enormously if you can
+   look up what the EIP value means.  The hex value as such doesn't help
+   me or anybody else very much: it will depend on your particular
+   kernel setup.  What you should do is take the hex value from the EIP
+   line (ignore the "0010:"), and look it up in the kernel namelist to
+   see which kernel function contains the offending address.
+
+   To find out the kernel function name, you'll need to find the system
+   binary associated with the kernel that exhibited the symptom.  This is
+   the file 'linux/vmlinux'.  To extract the namelist and match it against
+   the EIP from the kernel crash, do:
+
+		nm vmlinux | sort | less
+
+   This will give you a list of kernel addresses sorted in ascending
+   order, from which it is simple to find the function that contains the
+   offending address.  Note that the address given by the kernel
+   debugging messages will not necessarily match exactly with the
+   function addresses (in fact, that is very unlikely), so you can't
+   just 'grep' the list: the list will, however, give you the starting
+   point of each kernel function, so by looking for the function that
+   has a starting address lower than the one you are searching for but
+   is followed by a function with a higher address you will find the one
+   you want.  In fact, it may be a good idea to include a bit of
+   "context" in your problem report, giving a few lines around the
+   interesting one.
+
+   If you for some reason cannot do the above (you have a pre-compiled
+   kernel image or similar), telling me as much about your setup as
+   possible will help.  Please read the REPORTING-BUGS document for details.
+
+ - Alternately, you can use gdb on a running kernel. (read-only; i.e. you
+   cannot change values or set break points.) To do this, first compile the
+   kernel with -g; edit arch/i386/Makefile appropriately, then do a "make
+   clean". You'll also need to enable CONFIG_PROC_FS (via "make config").
+
+   After you've rebooted with the new kernel, do "gdb vmlinux /proc/kcore".
+   You can now use all the usual gdb commands. The command to look up the
+   point where your system crashed is "l *0xXXXXXXXX". (Replace the XXXes
+   with the EIP value.)
+
+   gdb'ing a non-running kernel currently fails because gdb (wrongly)
+   disregards the starting offset for which the kernel is compiled.
