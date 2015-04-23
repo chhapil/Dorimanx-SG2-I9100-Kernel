@@ -565,11 +565,7 @@ module_param(dhd_pktgen_len, uint, 0);
 #define DHD_COMPILED
 #endif /* DHD_DEBUG */
 
-static char dhd_version[] = "Dongle Host Driver, version " EPI_VERSION_STR
-#ifdef DHD_DEBUG
-"\nCompiled in " SRCBASE " on " __DATE__ " at " __TIME__
-#endif
-;
+static char dhd_version[] = "Dongle Host Driver, version " EPI_VERSION_STR;
 static void dhd_net_if_lock_local(dhd_info_t *dhd);
 static void dhd_net_if_unlock_local(dhd_info_t *dhd);
 static void dhd_suspend_lock(dhd_pub_t *dhdp);
