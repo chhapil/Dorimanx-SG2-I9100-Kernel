@@ -2767,7 +2767,6 @@ static int m5mo_check_version(struct v4l2_subdev *sd)
 
 	cam_info("*************************************\n");
 	cam_info("F/W Version: %s\n", state->exif.unique_id);
-	cam_dbg("Binary Released: %s %s\n", __DATE__, __TIME__);
 	cam_info("*************************************\n");
 
 	return 0;
