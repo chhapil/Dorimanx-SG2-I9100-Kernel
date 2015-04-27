@@ -1,9 +1,8 @@
-This is gprof.info, produced by makeinfo version 5.1 from gprof.texi.
+This is gprof.info, produced by makeinfo version 5.2 from gprof.texi.
 
 This file documents the gprof profiler of the GNU system.
 
-   Copyright (C) 1988, 1992, 1997, 1998, 1999, 2000, 2001, 2003, 2007,
-2008, 2009 Free Software Foundation, Inc.
+   Copyright (C) 1988-2015 Free Software Foundation, Inc.
 
    Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.3 or
@@ -28,7 +27,7 @@ to determine which parts of a program are taking most of the execution
 time.  We assume that you know how to write, compile, and execute
 programs.  GNU 'gprof' was written by Jay Fenlason.
 
-   This manual is for 'gprof' (GNU Binutils) version 2.24.0.
+   This manual is for 'gprof' (UBERTC-4.9.3) version 2.25.51.
 
    This document is distributed under the terms of the GNU Free
 Documentation License version 1.3.  A copy of the license is included in
@@ -437,6 +436,7 @@ which prints a flat profile and call graph analysis for all functions.
           c-decl.o:00000000 T print_lang_type
           ...
 
+
      To create a MAP_FILE with GNU 'nm', type a command like 'nm
      --extern-only --defined-only -v --print-file-name program-name'.
 
@@ -524,6 +524,11 @@ File: gprof.info,  Node: Analysis Options,  Next: Miscellaneous Options,  Prev: 
      significantly increases the running time of 'gprof', and magnifies
      statistical inaccuracies.  *Note Statistical Sampling Error:
      Sampling Error.
+
+'--inline-file-names'
+     This option causes 'gprof' to print the source file after each
+     symbol in both the flat profile and the call graph.  The full path
+     to the file is printed if used with the '-L' option.
 
 '-m NUM'
 '--min-count=NUM'
@@ -1237,6 +1242,7 @@ profiling.  Note that 'ct_init' accounted for four histogram hits, and
                      0.00    0.00   13327/13496       ct_init
      [7]      0.0    0.00    0.00   13496         init_block
 
+
    Now let's look at some of 'gprof''s output from the same program run,
 this time with line-by-line profiling enabled.  Note that 'ct_init''s
 four histogram hits are broken down into four lines of source code--one
@@ -1276,6 +1282,7 @@ one call from line 396, 3071 calls from line 384, 3730 calls from line
                  0.00    0.00    3730/13496       ct_init (trees.c:385)
                  0.00    0.00    6525/13496       ct_init (trees.c:387)
      [6]  0.0    0.00    0.00   13496         init_block (trees.c:408)
+
 
 
 File: gprof.info,  Node: Annotated Source,  Prev: Line-by-line,  Up: Output
@@ -1317,6 +1324,7 @@ line numbers added:
      17     crc = c;
      18     return c ^ 0xffffffffL;
      19 }
+
 
    'updcrc' has at least five basic-blocks.  One is the function itself.
 The 'if' statement on line 9 generates two more basic-blocks, one for
@@ -2416,35 +2424,35 @@ their use in free software.
 
 
 Tag Table:
-Node: Top774
-Node: Introduction2099
-Node: Compiling4590
-Node: Executing8646
-Node: Invoking11434
-Node: Output Options12849
-Node: Analysis Options19940
-Node: Miscellaneous Options23639
-Node: Deprecated Options24893
-Node: Symspecs26956
-Node: Output28782
-Node: Flat Profile29822
-Node: Call Graph34775
-Node: Primary38007
-Node: Callers40595
-Node: Subroutines42713
-Node: Cycles44554
-Node: Line-by-line51331
-Node: Annotated Source55405
-Node: Inaccuracy58402
-Node: Sampling Error58660
-Node: Assumptions61564
-Node: How do I?63034
-Node: Incompatibilities64591
-Node: Details66085
-Node: Implementation66478
-Node: File Format72377
-Node: Internals76665
-Node: Debugging85155
-Node: GNU Free Documentation License86745
+Node: Top719
+Node: Introduction2045
+Node: Compiling4536
+Node: Executing8592
+Node: Invoking11380
+Node: Output Options12795
+Node: Analysis Options19887
+Node: Miscellaneous Options23807
+Node: Deprecated Options25061
+Node: Symspecs27124
+Node: Output28950
+Node: Flat Profile29990
+Node: Call Graph34943
+Node: Primary38175
+Node: Callers40763
+Node: Subroutines42881
+Node: Cycles44722
+Node: Line-by-line51499
+Node: Annotated Source55575
+Node: Inaccuracy58573
+Node: Sampling Error58831
+Node: Assumptions61735
+Node: How do I?63205
+Node: Incompatibilities64762
+Node: Details66256
+Node: Implementation66649
+Node: File Format72548
+Node: Internals76836
+Node: Debugging85326
+Node: GNU Free Documentation License86916
 
 End Tag Table
