@@ -10,6 +10,7 @@
 
 #include <linux/kernel.h>
 #include <linux/init.h>
+#include <linux/cpu_pm.h>
 #include <linux/cpuidle.h>
 #include <linux/io.h>
 #include <linux/suspend.h>
@@ -593,6 +594,8 @@ static int exynos4_enter_core0_aftr(struct cpuidle_device *dev,
 #endif
 
 	local_irq_disable();
+	
+	cpu_pm_enter();
 
 	if (log_en)
 		pr_info("+++aftr\n");
@@ -659,6 +662,8 @@ early_wakeup:
 
 	if (log_en)
 		pr_info("---aftr\n");
+		
+	cpu_pm_exit();
 
 	local_irq_enable();
 	idle_time = (after.tv_sec - before.tv_sec) * USEC_PER_SEC +
@@ -692,6 +697,8 @@ static int exynos4_enter_core0_lpa(struct cpuidle_device *dev,
 	bt_uart_rts_ctrl(1);
 #endif
 	local_irq_disable();
+	
+	cpu_pm_enter();
 
 #ifdef CONFIG_INTERNAL_MODEM_IF
 	gpio_set_value(GPIO_PDA_ACTIVE, 0);
@@ -797,6 +804,8 @@ early_wakeup:
 #ifdef CONFIG_INTERNAL_MODEM_IF
 	gpio_set_value(GPIO_PDA_ACTIVE, 1);
 #endif
+
+	cpu_pm_exit();
 
 	local_irq_enable();
 	idle_time = (after.tv_sec - before.tv_sec) * USEC_PER_SEC +
