@@ -108,6 +108,11 @@ config IOSCHED_FIOPS
 	---help---
 	 Test
 
+config IOSCHED_TRIPNDROID
+	bool
+	default y
+	---help---
+	 Test
 
 choice
 	prompt "Default I/O scheduler"
@@ -152,6 +157,9 @@ choice
 		
 	config DEFAULT_FIOPS
 		bool "fiops"
+		
+        config DEFAULT_TRIPNDROID
+		bool "tripndroid"
 
 endchoice
 
@@ -167,6 +175,7 @@ config DEFAULT_IOSCHED
 	default "noop" if DEFAULT_NOOP
 	default "fifo" if DEFAULT_FIFO
 	default "fiops" if DEFAULT_FIOPS
+	default "tripndroid" if DEFAULT_TRIPNDROID
 
 endmenu
 
