@@ -39,14 +39,6 @@ config CFQ_GROUP_IOSCHED
 	---help---
 	  Enable group IO scheduling in CFQ.
 
-config IOSCHED_FIOPS
-	tristate "IOPS based I/O scheduler"
-	default y
-	---help---
-	  This is an IOPS based I/O scheduler. It will try to distribute
-          IOPS equally among all processes in the system. Its mainly for
-          Flash based storage.
-
 config IOSCHED_VR
 	tristate "V(R) I/O scheduler"
 	default n
@@ -110,6 +102,13 @@ config IOSCHED_FIFO
 	 Fifo is similar to no-op I/O scheduler and it's a minimal scheduler that does basic merging
 	 and sorting. Ported from: https://github.com/AndroidDeveloperAlliance/ZenKernel_TUNA/blob/master/block/fifo-iosched.c
 
+config IOSCHED_FIOPS
+	bool
+	default y
+	---help---
+	 Test
+
+
 choice
 	prompt "Default I/O scheduler"
 	default DEFAULT_CFQ
@@ -142,9 +141,6 @@ choice
 	config DEFAULT_BFQ
 		bool "BFQ" if IOSCHED_BFQ=y
 
-	config DEFAULT_FIOPS
-		bool "FIOPS" if IOSCHED_FIOPS=y
-
 	config DEFAULT_ZEN
 		bool "ZEN" if IOSCHED_ZEN=y
 
@@ -153,6 +149,9 @@ choice
 
 	config DEFAULT_FIFO
 		bool "fifo"
+		
+	config DEFAULT_FIOPS
+		bool "fiops"
 
 endchoice
 
@@ -161,13 +160,13 @@ config DEFAULT_IOSCHED
 	default "deadline" if DEFAULT_DEADLINE
 	default "cfq" if DEFAULT_CFQ
 	default "row" if DEFAULT_ROW
-	default "fiops" if DEFAULT_FIOPS
 	default "sio" if DEFAULT_SIO
 	default "vr" if DEFAULT_VR
 	default "bfq" if DEFAULT_BFQ
 	default "zen" if DEFAULT_ZEN
 	default "noop" if DEFAULT_NOOP
 	default "fifo" if DEFAULT_FIFO
+	default "fiops" if DEFAULT_FIOPS
 
 endmenu
 
