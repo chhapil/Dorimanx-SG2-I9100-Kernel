@@ -49,6 +49,56 @@ static LIST_HEAD(cpufreq_policy_list);
 static DEFINE_PER_CPU(char[CPUFREQ_NAME_LEN], cpufreq_cpu_governor);
 #endif
 
+/*
+ * cpu_policy_rwsem is a per CPU reader-writer semaphore designed to cure
+ * all cpufreq/hotplug/workqueue/etc related lock issues.
+ *
+ * The rules for this semaphore:
+ * - Any routine that wants to read from the policy structure will
+ *   do a down_read on this semaphore.
+ * - Any routine that will write to the policy structure and/or may take away
+ *   the policy altogether (eg. CPU hotplug), will hold this lock in write
+ *   mode before doing so.
+ *
+ * Additional rules:
+ * - All holders of the lock should check to make sure that the CPU they
+ *   are concerned with are online after they get the lock.
+ * - Governor routines that can be called in cpufreq hotplug path should not
+ *   take this sem as top level hotplug notifier handler takes this.
+ * - Lock should not be held across
+ *     __cpufreq_governor(data, CPUFREQ_GOV_STOP);
+ */
+static DEFINE_PER_CPU(int, cpufreq_policy_cpu);
+static DEFINE_PER_CPU(struct rw_semaphore, cpu_policy_rwsem);
+
+#define lock_policy_rwsem(mode, cpu)					\
+int lock_policy_rwsem_##mode(int cpu)					\
+{									\
+	int policy_cpu = per_cpu(cpufreq_policy_cpu, cpu);		\
+	BUG_ON(policy_cpu == -1);					\
+	down_##mode(&per_cpu(cpu_policy_rwsem, policy_cpu));		\
+	if (unlikely(!cpu_online(cpu))) {				\
+		up_##mode(&per_cpu(cpu_policy_rwsem, policy_cpu));	\
+		return -1;						\
+	}								\
+									\
+	return 0;							\
+}
+
+lock_policy_rwsem(read, cpu);
+lock_policy_rwsem(write, cpu);
+
+#define unlock_policy_rwsem(mode, cpu)					\
+void unlock_policy_rwsem_##mode(int cpu)				\
+{									\
+	int policy_cpu = per_cpu(cpufreq_policy_cpu, cpu);		\
+	BUG_ON(policy_cpu == -1);					\
+	up_##mode(&per_cpu(cpu_policy_rwsem, policy_cpu));		\
+}
+
+unlock_policy_rwsem(read, cpu);
+unlock_policy_rwsem(write, cpu);
+
 static inline bool has_target(void)
 {
 	return cpufreq_driver->target;
