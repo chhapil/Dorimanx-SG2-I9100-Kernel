@@ -38,7 +38,7 @@ config IP_ADVANCED_ROUTER
 	  If you turn on IP forwarding, you should consider the rp_filter, which
 	  automatically rejects incoming packets if the routing table entry
 	  for their source address doesn't match the network interface they're
-	  arriving on. This has security advantages because it prevents the        
+	  arriving on. This has security advantages because it prevents the
 	  so-called IP spoofing, however it can pose problems if you use
 	  asymmetric routing (packets from you to a host take a different path
 	  than packets from that host to you) or if you operate a non-routing
@@ -444,7 +444,7 @@ config TCP_CONG_BIC
 
 config TCP_CONG_CUBIC
 	tristate "CUBIC TCP"
-	default m
+	default y
 	---help---
 	This is version 2.0 of BIC-TCP which uses a cubic growth function
 	among other techniques.
@@ -452,7 +452,7 @@ config TCP_CONG_CUBIC
 
 config TCP_CONG_WESTWOOD
 	tristate "TCP Westwood+"
-	default y
+	default m
 	---help---
 	TCP Westwood+ is a sender-side only modification of the TCP Reno
 	protocol stack that optimizes the performance of TCP congestion
@@ -602,7 +602,7 @@ endchoice
 
 endif
 
-config TCP_CONG_WESTWOOD
+config TCP_CONG_CUBIC
 	tristate
 	depends on !TCP_CONG_ADVANCED
 	default y
@@ -617,7 +617,7 @@ config DEFAULT_TCP_CONG
 	default "westwood" if DEFAULT_WESTWOOD
 	default "veno" if DEFAULT_VENO
 	default "reno" if DEFAULT_RENO
-	default "westwood"
+	default "cubic"
 
 config TCP_MD5SIG
 	bool "TCP: MD5 Signature Option support (RFC2385) (EXPERIMENTAL)"
