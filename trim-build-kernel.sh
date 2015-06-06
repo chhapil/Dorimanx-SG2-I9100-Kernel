@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# 1.) load the ".config"                                                      #
+echo "Loading config file";
+bash ./load_config.sh;                                                      #
+                                                                             #
+# 2.) clean the sources                                                       #
+echo "Cleaning kernel now";
+bash ./clean-kernel.sh;                                                           #
+
+# 3.) now you can build my kernel                                             #
+bash ./build_kernel.sh                                                           #
+
+#                                                                             #
+# Have fun and update me if something nice can be added to my source.         #
+###############################################################################
+
