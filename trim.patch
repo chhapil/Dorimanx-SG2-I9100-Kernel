@@ -1,0 +1,48 @@
+diff --git a/build_kernel.sh b/build_kernel.sh
+index bbe8e2a..58ac9ae 100755
+--- a/build_kernel.sh
++++ b/build_kernel.sh
+@@ -230,7 +230,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
+ 	cp $KERNELDIR/zImage /$KERNELDIR/READY-JB/boot/;
+ 
+ 	# create zip-file
+-	cd $KERNELDIR/READY-JB/ && zip -r ${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-UBER"`.zip .;
++	cd $KERNELDIR/READY-JB/ && zip -r ${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-TRIM"`.zip .;
+ 
+ 	# push to android
+ 	ADB_STATUS=`adb get-state`;
+diff --git a/drivers/mmc/card/block.c b/drivers/mmc/card/block.c
+index 418cb43..a39007e 100755
+--- a/drivers/mmc/card/block.c
++++ b/drivers/mmc/card/block.c
+@@ -2214,10 +2214,11 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
+ 		if (card->host->areq)
+ 			mmc_blk_issue_rw_rq(mq, NULL);
+ 		if (req->cmd_flags & REQ_SECURE &&
+-			!(card->quirks & MMC_QUIRK_SEC_ERASE_TRIM_BROKEN))
++                    !(card->quirks & MMC_QUIRK_SEC_ERASE_TRIM_BROKEN))
+ 			ret = mmc_blk_issue_secdiscard_rq(mq, req);
+-		else
+-			ret = mmc_blk_issue_discard_rq(mq, req);
++			//panic("secdiscard"); //ret = mmc_blk_issue_secdiscard_rq(mq, req);
++                else
++                    ret = mmc_blk_issue_discard_rq(mq, req);
+ 	} else if (req && req->cmd_flags & REQ_FLUSH) {
+ 		/* complete ongoing async transfer before issuing flush */
+ 		if (card->host->areq)
+diff --git a/drivers/mmc/host/mshci.c b/drivers/mmc/host/mshci.c
+index ace9bb1..43aa11c 100755
+--- a/drivers/mmc/host/mshci.c
++++ b/drivers/mmc/host/mshci.c
+@@ -2047,11 +2047,7 @@ int mshci_add_host(struct mshci_host *host)
+ 	mmc->ops = &mshci_ops;
+ 	mmc->f_min = 400000;
+ 	mmc->f_max = host->max_clk;
+-#ifdef CONFIG_MACH_U1
+-	mmc->caps |= MMC_CAP_SDIO_IRQ;
+-#else
+ 	mmc->caps |= MMC_CAP_SDIO_IRQ | MMC_CAP_ERASE;
+-#endif
+ 
+ 	mmc->caps |= MMC_CAP_4_BIT_DATA;
+ 
