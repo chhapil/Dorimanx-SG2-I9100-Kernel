@@ -221,7 +221,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 
 	# clean old files ...
 	rm $KERNELDIR/READY-JB/boot/zImage;
-	rm $KERNELDIR/READY-JB/Kernel_*;
+	rm $KERNELDIR/READY-JB/Dori_*;
 
 	# copy all needed to ready kernel folder
 	cp $KERNELDIR/.config $KERNELDIR/READY-JB/;

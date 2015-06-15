@@ -50,7 +50,7 @@ zen_merged_requests(struct request_queue *q, struct request *req,
 	if (!list_empty(&req->queuelist) && !list_empty(&next->queuelist)) {
 		if (time_before(rq_fifo_time(next), rq_fifo_time(req))) {
 			list_move(&req->queuelist, &next->queuelist);
-			rq_set_fifo_time(req, rq_fifo_time(next));
+			req->fifo_time = next->fifo_time;
 		}
 	}
 
@@ -64,7 +64,7 @@ static void zen_add_request(struct request_queue *q, struct request *rq)
 	const int sync = rq_is_sync(rq);
 
 	if (zdata->fifo_expire[sync]) {
-		rq_set_fifo_time(rq, jiffies + zdata->fifo_expire[sync]);
+		rq->fifo_time = (jiffies + zdata->fifo_expire[sync]);
 		list_add_tail(&rq->queuelist, &zdata->fifo_list[sync]);
 	}
 }
