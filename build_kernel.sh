@@ -221,7 +221,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 
 	# clean old files ...
 	rm $KERNELDIR/READY-JB/boot/zImage;
-	rm $KERNELDIR/READY-JB/Dori-*;
+	rm $KERNELDIR/READY-JB/Dori_*;
 
 	# copy all needed to ready kernel folder
 	cp $KERNELDIR/.config $KERNELDIR/READY-JB/;
@@ -237,7 +237,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 	if [ "$ADB_STATUS" == "device" ]; then
 		read -t 3 -p "push kernel to android, 3sec timeout (y/n)?";
 		if [ "$REPLY" == "y" ]; then
-			adb push $KERNELDIR/READY-JB/Dori-*JB*.zip /storage/extSdCard/;
+			adb push $KERNELDIR/READY-JB/Kernel_*JB*.zip /sdcard/;
 			read -t 3 -p "reboot to recovery, 3sec timeout (y/n)?";
 			if [ "$REPLY" == "y" ]; then
 				adb reboot recovery;
