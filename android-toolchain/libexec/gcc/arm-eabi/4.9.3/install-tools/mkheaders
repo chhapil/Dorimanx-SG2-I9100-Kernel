@@ -53,7 +53,7 @@ if [ x$1 != x ] ; then
   prefix=$1
   shift
 else
-  prefix=/home/cl3kener/android/toolchain/uber/out/arm-eabi-4.9
+  prefix=/home/ruturaj/git/ubertc/out/arm-eabi-4.9-cortex-a9
 fi
 
 # Allow for alternate isysroot in which to find headers

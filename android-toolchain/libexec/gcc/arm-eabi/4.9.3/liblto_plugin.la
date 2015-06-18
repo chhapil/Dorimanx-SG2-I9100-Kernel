@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/home/cl3kener/android/toolchain/uber/out/arm-eabi-4.9/libexec/gcc/arm-eabi/4.9.3'
+libdir='/home/ruturaj/git/ubertc/out/arm-eabi-4.9-cortex-a9/libexec/gcc/arm-eabi/4.9.3'

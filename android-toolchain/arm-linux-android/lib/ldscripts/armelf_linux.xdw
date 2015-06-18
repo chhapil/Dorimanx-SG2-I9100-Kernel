@@ -7,7 +7,7 @@ OUTPUT_FORMAT("elf32-littlearm", "elf32-bigarm",
 	      "elf32-littlearm")
 OUTPUT_ARCH(arm)
 ENTRY(_start)
-SEARCH_DIR("/home/cl3kener/android/toolchain/uber/out/arm-eabi-4.9/arm-linux-android/lib");
+SEARCH_DIR("/home/ruturaj/git/ubertc/out/arm-eabi-4.9-cortex-a9/arm-linux-android/lib");
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
