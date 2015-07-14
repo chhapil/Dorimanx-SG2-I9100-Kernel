@@ -364,8 +364,8 @@ static ssize_t store_io_is_busy(struct kobject *a, struct attribute *b,
 	for_each_online_cpu(j) {
 		struct cpu_dbs_info_s *dbs_info;
 		dbs_info = &per_cpu(od_cpu_dbs_info, j);
-		dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-			&dbs_info->prev_cpu_wall);
+		dbs_info->prev_cpu_idle = get_cpu_idle_time_plus(j,
+			&dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
 	}
 	return count;
 }
@@ -562,8 +562,8 @@ static ssize_t store_ignore_nice_load(struct kobject *a, struct attribute *b,
 	for_each_online_cpu(j) {
 		struct cpu_dbs_info_s *dbs_info;
 		dbs_info = &per_cpu(od_cpu_dbs_info, j);
-		dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-			&dbs_info->prev_cpu_wall);
+		dbs_info->prev_cpu_idle = get_cpu_idle_time_plus(j,
+			&dbs_info->prev_cpu_wall, dbs_tuners_ins.io_is_busy);
 		if (dbs_tuners_ins.ignore_nice)
 			dbs_info->prev_cpu_nice =
 					kcpustat_cpu(j).cpustat[CPUTIME_NICE];
@@ -608,7 +608,7 @@ static ssize_t store_powersave_bias(struct kobject *a, struct attribute *b,
 
 	dbs_tuners_ins.powersave_bias = input;
 
-	cpu_maps_update_begin();
+	get_online_cpus();
 	mutex_lock(&dbs_mutex);
 
 	if (!bypass) {
@@ -681,7 +681,7 @@ skip_this_cpu_bypass:
 	}
 
 	mutex_unlock(&dbs_mutex);
-	cpu_maps_update_done();
+	put_online_cpus();
 
 	return count;
 }
@@ -737,8 +737,10 @@ static void dbs_freq_increase(struct cpufreq_policy *p, unsigned int freq)
 {
 	if (dbs_tuners_ins.powersave_bias)
 		freq = powersave_bias_target(p, freq, CPUFREQ_RELATION_H);
+#if !defined(CONFIG_ARCH_EXYNOS4) && !defined(CONFIG_ARCH_EXYNOS5)
 	else if (p->cur == p->max)
 		return;
+#endif
 
 	__cpufreq_driver_target(p, freq, dbs_tuners_ins.powersave_bias ?
 			CPUFREQ_RELATION_L : CPUFREQ_RELATION_H);
@@ -794,7 +796,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		 * the system is actually idle. So subtract the iowait time
 		 * from the cpu idle time.
 		 */
-		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time);
+		cur_idle_time = get_cpu_idle_time_plus(j, &cur_wall_time, io_busy);
 
 		wall_time = (unsigned int)
 			(cur_wall_time - j_dbs_info->prev_cpu_wall);
@@ -1069,8 +1071,8 @@ static int cpufreq_governor_dbs(struct cpufreq_policy *policy,
 			j_dbs_info = &per_cpu(od_cpu_dbs_info, j);
 			j_dbs_info->cur_policy = policy;
 
-			j_dbs_info->prev_cpu_idle = get_cpu_idle_time(j,
-					&j_dbs_info->prev_cpu_wall);
+			j_dbs_info->prev_cpu_idle = get_cpu_idle_time_plus(j,
+					&j_dbs_info->prev_cpu_wall, io_busy);
 
 			prev_load = (unsigned int)
 				(j_dbs_info->prev_cpu_wall - j_dbs_info->prev_cpu_idle);

@@ -133,15 +133,15 @@ static ssize_t store_io_is_busy(struct kobject *a, struct attribute *b,
 	darkness_tuners_ins.io_is_busy = !!input;
 
 	/* we need to re-evaluate prev_cpu_idle */
-	cpu_maps_update_begin();
+	get_online_cpus();
 	for_each_online_cpu(cpu) {
 		struct cpufreq_darkness_cpuinfo *this_darkness_cpuinfo = 
 			&per_cpu(od_darkness_cpuinfo, cpu);
 
-		this_darkness_cpuinfo->prev_cpu_idle = get_cpu_idle_time(cpu,
-			&this_darkness_cpuinfo->prev_cpu_wall);
+		this_darkness_cpuinfo->prev_cpu_idle = get_cpu_idle_time_plus(cpu,
+			&this_darkness_cpuinfo->prev_cpu_wall, darkness_tuners_ins.io_is_busy);
 	}
-	cpu_maps_update_done();
+	put_online_cpus();
 	return count;
 }
 
@@ -224,7 +224,7 @@ static void darkness_check_cpu(struct cpufreq_darkness_cpuinfo *this_darkness_cp
 		if (!j_darkness_cpuinfo->governor_enabled)
 			continue;
 
-		cur_idle_time = get_cpu_idle_time(j, &cur_wall_time);
+		cur_idle_time = get_cpu_idle_time_plus(j, &cur_wall_time, io_busy);
 
 		wall_time = (unsigned int)
 			(cur_wall_time - j_darkness_cpuinfo->prev_cpu_wall);
@@ -300,8 +300,8 @@ static int cpufreq_governor_darkness(struct cpufreq_policy *policy,
 		this_darkness_cpuinfo->cpu = cpu;
 		this_darkness_cpuinfo->cur_policy = policy;
 
-		this_darkness_cpuinfo->prev_cpu_idle = get_cpu_idle_time(cpu,
-			&this_darkness_cpuinfo->prev_cpu_wall);
+		this_darkness_cpuinfo->prev_cpu_idle = get_cpu_idle_time_plus(cpu,
+			&this_darkness_cpuinfo->prev_cpu_wall, io_busy);
 
 		darkness_enable++;
 		/*
