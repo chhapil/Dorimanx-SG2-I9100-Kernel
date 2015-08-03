@@ -221,7 +221,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 
 	# clean old files ...
 	rm $KERNELDIR/READY-JB/boot/zImage;
-	rm $KERNELDIR/READY-JB/Kernel_*;
+	rm $KERNELDIR/READY-JB/Dorimanx-*;
 
 	# copy all needed to ready kernel folder
 	cp $KERNELDIR/.config $KERNELDIR/READY-JB/;
@@ -230,14 +230,14 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 	cp $KERNELDIR/zImage /$KERNELDIR/READY-JB/boot/;
 
 	# create zip-file
-	cd $KERNELDIR/READY-JB/ && zip -r Kernel_${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-CHHAPIL"`.zip .;
+	cd $KERNELDIR/READY-JB/ && zip -r ${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-TRIM"`.zip .;
 
 	# push to android
 	ADB_STATUS=`adb get-state`;
 	if [ "$ADB_STATUS" == "device" ]; then
 		read -t 3 -p "push kernel to android, 3sec timeout (y/n)?";
 		if [ "$REPLY" == "y" ]; then
-			adb push $KERNELDIR/READY-JB/Kernel_*JB*.zip /sdcard/;
+			adb push $KERNELDIR/READY-JB/Dorimanx-*JB*.zip /sdcard/;
 			read -t 3 -p "reboot to recovery, 3sec timeout (y/n)?";
 			if [ "$REPLY" == "y" ]; then
 				adb reboot recovery;
