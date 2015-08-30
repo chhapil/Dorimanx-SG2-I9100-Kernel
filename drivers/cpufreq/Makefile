@@ -18,6 +18,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_NIGHTMARE)	+= cpufreq_nightmare.o
 obj-$(CONFIG_CPU_FREQ_GOV_DARKNESS)	+= cpufreq_darkness.o
 obj-$(CONFIG_CPU_FREQ_GOV_NEOX)		+= cpufreq_neox.o cpufreq_governor.o
 obj-$(CONFIG_CPU_FREQ_GOV_LULZACTIVEW)	+= cpufreq_lulzactivew.o
+obj-$(CONFIG_CPU_FREQ_GOV_LIONHEART)	+= cpufreq_lionheart.o
 
 # CPUfreq cross-arch helpers
 obj-$(CONFIG_CPU_FREQ_TABLE)		+= freq_table.o
