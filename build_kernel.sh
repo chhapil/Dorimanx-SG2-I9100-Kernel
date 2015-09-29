@@ -78,6 +78,9 @@ elif [ "a$GCCVERSION" == "a0407" ]; then
 elif [ "a$GCCVERSION" == "a0408" ]; then
 	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
 	echo "GCC 4.8.X Compiler Detected, building";
+elif [ "a$GCCVERSION" == "a0409" ]; then
+	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
+	echo "GCC 4.9.X Compiler Detected, building";
 else
 	echo "Compiler not recognized! please fix the 'build_kernel.sh'-script to match your compiler.";
 	exit 0;
@@ -225,7 +228,7 @@ if [ -e $KERNELDIR/arch/arm/boot/zImage ]; then
 	cp $KERNELDIR/zImage /$KERNELDIR/READY-JB/boot/;
 
 	# create zip-file
-	cd $KERNELDIR/READY-JB/ && zip -r Kernel_${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-PWR-CORE"`.zip .;
+	cd $KERNELDIR/READY-JB/ && zip -r Kernel_${GETVER}-`date +"[%H-%M]-[%d-%m]-JB-SGII-GSSTUDIOS-TRIM"`.zip .;
 
 	# push to android
 	ADB_STATUS=`adb get-state`;
