@@ -555,21 +555,9 @@ uint dhd_pktgen_len = 0;
 module_param(dhd_pktgen_len, uint, 0);
 #endif /* SDTEST */
 
-/* Version string to report */
-#ifdef DHD_DEBUG
-#ifndef SRCBASE
-#define SRCBASE        "drivers/net/wireless/bcmdhd"
-#endif
-#define DHD_COMPILED "\nCompiled in " SRCBASE
-#else
-#define DHD_COMPILED
-#endif /* DHD_DEBUG */
+extern char dhd_version[];
 
-static char dhd_version[] = "Dongle Host Driver, version " EPI_VERSION_STR
-#ifdef DHD_DEBUG
-"\nCompiled in " SRCBASE " on " __DATE__ " at " __TIME__
-#endif
-;
+int dhd_net_bus_devreset(struct net_device *dev, uint8 flag);
 static void dhd_net_if_lock_local(dhd_info_t *dhd);
 static void dhd_net_if_unlock_local(dhd_info_t *dhd);
 static void dhd_suspend_lock(dhd_pub_t *dhdp);
