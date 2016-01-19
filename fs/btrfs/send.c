@@ -349,16 +349,24 @@ static int fs_path_ensure_buf(struct fs_path *p, int len)
 	if (p->buf_len >= len)
 		return 0;
 
+	if (len > PATH_MAX) {
+		WARN_ON(1);
+		return -ENOMEM;
+	}
+
 	path_len = p->end - p->start;
 	old_buf_len = p->buf_len;
 
 	/*
 	 * First time the inline_buf does not suffice
 	 */
-	if (p->buf == p->inline_buf)
+	if (p->buf == p->inline_buf) {
 		tmp_buf = kmalloc(len, GFP_NOFS);
-	else
+		if (tmp_buf)
+			memcpy(tmp_buf, p->buf, old_buf_len);
+	} else {
 		tmp_buf = krealloc(p->buf, len, GFP_NOFS);
+	}
 	if (!tmp_buf)
 		return -ENOMEM;
 	p->buf = tmp_buf;
@@ -1663,7 +1671,7 @@ static int get_first_ref(struct btrfs_root *root, u64 ino,
 		goto out;
 	}
 
-	if (key.type == BTRFS_INODE_REF_KEY) {
+	if (found_key.type == BTRFS_INODE_REF_KEY) {
 		struct btrfs_inode_ref *iref;
 		iref = btrfs_item_ptr(path->nodes[0], path->slots[0],
 				      struct btrfs_inode_ref);

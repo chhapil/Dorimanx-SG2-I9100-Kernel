@@ -381,6 +381,8 @@ static inline int is_vmalloc_or_module_addr(const void *x)
 }
 #endif
 
+extern void kvfree(const void *addr);
+
 static inline void compound_lock(struct page *page)
 {
 #ifdef CONFIG_TRANSPARENT_HUGEPAGE
@@ -1875,7 +1877,7 @@ void task_dirty_inc(struct task_struct *tsk);
 */
 
 /* readahead.c in kbytes, for 16GB cards*/
-#define VM_MAX_READAHEAD	1024
+#define VM_MAX_READAHEAD	512
 /* kbytes (includes current page) */
 #define VM_MIN_READAHEAD	16
 
