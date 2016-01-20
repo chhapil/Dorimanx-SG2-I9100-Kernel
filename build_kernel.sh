@@ -58,7 +58,8 @@ if [ $? == 1 ]; then
 	echo "xml-Error: $XML2CHECK";
 	exit 1;
 fi;
-
+echo "Detected gcc version";
+echo  "a$GCCVERSION";
 # compiler detection
 if [ "a$GCCVERSION" == "a0404" ]; then
 	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_old_gcc $KERNELDIR/arch/arm/boot/compressed/Makefile;
@@ -81,6 +82,9 @@ elif [ "a$GCCVERSION" == "a0408" ]; then
 elif [ "a$GCCVERSION" == "a0409" ]; then
 	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
 	echo "GCC 4.9.X Compiler Detected, building";
+elif [ "a$GCCVERSION" == "a0503" ]; then
+	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
+	echo "GCC 5.x.x Compiler Detected, building";
 else
 	echo "Compiler not recognized! please fix the 'build_kernel.sh'-script to match your compiler.";
 	exit 0;
