@@ -18,6 +18,8 @@
 # Have fun and update me if something nice can be added to my source.         #
 ###############################################################################
 
+all1=$(date +%s.%N)
+
 # location
 if [ "${1}" != "" ]; then
 	export KERNELDIR=`readlink -f ${1}`;
@@ -252,3 +254,6 @@ else
 	# with red-color
 	echo -e "\e[1;31mKernel STUCK in BUILD! no zImage exist\e[m"
 fi;
+
+all2=$(date +%s.%N)
+echo "${bldgrn}Total elapsed time: ${txtrst}${grn}$(echo "($all2 - $all1) / 60"|bc ) minutes ($(echo "$all2 - $all1"|bc ) seconds) ${txtrst}"
