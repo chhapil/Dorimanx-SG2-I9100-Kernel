@@ -60,9 +60,9 @@ mkdir ~/samsung-i9100
 
 cd ~/samsung-i9100
 
-git clone https://github.com/dorimanx/Dorimanx-SG2-I9100-Kernel.git
+git clone https://github.com/gsstudios/Dorimanx-SG2-I9100-Kernel.git
 
-git clone https://github.com/dorimanx/initramfs3.git
+git clone https://github.com/gsstudios/initramfs3.git
 
 
 
@@ -220,7 +220,7 @@ sh build_kernel.sh
 
 # Kernel will not build on 32BIT systems!
 
-# Tip from gsstudios: Make sure to have the latest LTS release of Ubuntu. Latest versions are fine as well. 
+# Tip from gsstudios: It best to use Ubuntu 14.04 LTS as newer builds may give different errors but can be easily fixed anyway :)
 
 
 
@@ -232,8 +232,13 @@ sh build_kernel.sh
 
 # It is important to install this otherwise the linaro GCC will fire errors
 
+# For ubuntu 14.04 and earlier
+
 sudo apt-get install ia32-libs lib32ncurses5-dev ccache imagemagick libxml2-utils optipng zip tar bash vim
 
+# For ubuntu 16.04
+
+sudo apt-get install lib32tinfo5 libc6-i386 lib32tinfo5 lib32tinfo-dev libc6-i386 lib32c-dev lib32ncurses5 lib32z1 lib32ncurses5-dev ccache imagemagick libxml2-utils optipng zip tar bash vim
 
 
 # Tip from gsstudios: If terminal says that the package is out of date, replace it with the recommended one!
@@ -270,7 +275,8 @@ sudo rm -rf /tmp/*
 
 # Time for the real business :)
 
-
+# Make sure you are root user!!! Otherwise terminal will give errors!
+sudo -s 
 
 # Install normal text editor!
 
