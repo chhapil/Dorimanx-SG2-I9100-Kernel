@@ -87,6 +87,9 @@ elif [ "a$GCCVERSION" == "a0409" ]; then
 elif [ "a$GCCVERSION" == "a0503" ]; then
 	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
 	echo "GCC 5.x.x Compiler Detected, building";
+elif [ "a$GCCVERSION" == "a0600" ]; then
+	cp $KERNELDIR/arch/arm/boot/compressed/Makefile_linaro $KERNELDIR/arch/arm/boot/compressed/Makefile;
+	echo "GCC 6.0.x Compiler Detected, building";
 else
 	echo "Compiler not recognized! please fix the 'build_kernel.sh'-script to match your compiler.";
 	exit 0;
