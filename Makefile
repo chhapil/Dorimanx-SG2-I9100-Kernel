@@ -373,7 +373,7 @@ CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 
 LOW_ARM_FLAGS	= -pipe -march=armv7-a -mcpu=cortex-a9 \
 		  -mtune=cortex-a9 -marm -mfpu=neon \
-		  -mfloat-abi=softfp -fno-pic -munaligned-access
+		  -mfloat-abi=softfp -fno-pic
 
 MODULES		= -fmodulo-sched -fmodulo-sched-allow-regmoves
 
@@ -414,7 +414,8 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -std=gnu89 \
-		   $(call cc-option,-fno-delete-null-pointer-checks,)
+		   $(call cc-option,-fno-delete-null-pointer-checks,) \
+		   $(KERNEL_MODS)
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
