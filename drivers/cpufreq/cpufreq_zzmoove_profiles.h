@@ -361,8 +361,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq (0=disable, range from 0 to freq->max in khz)
-		700000,		// music_min_freq (0=disable, range from 0 to freq->min in khz)
-		2,		// music_min_cores (0=disable, range from 1 to MAX_CORES)
+		400000,		// music_min_freq (0=disable, range from 0 to freq->min in khz)
+		1,		// music_min_cores (0=disable, range from 1 to MAX_CORES)
 #endif /* ENABLE_MUSIC_LIMITS */
 		75,		// smooth_up (range from 1 to 100)
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -536,8 +536,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		95,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -711,8 +711,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		95,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -886,8 +886,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		75,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1061,8 +1061,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		80,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1236,8 +1236,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		75,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1411,8 +1411,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		68,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1586,8 +1586,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		70,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1761,8 +1761,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		60,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -1938,8 +1938,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		70,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
@@ -2113,8 +2113,8 @@ struct zzmoove_profile zzmoove_profiles[] = {
 #endif /* ENABLE_INPUTBOOSTER */
 #ifdef ENABLE_MUSIC_LIMITS
 		1200000,	// music_max_freq
-		700000,		// music_min_freq
-		2,		// music_min_cores
+		400000,		// music_min_freq
+		1,		// music_min_cores
 #endif /* ENABLE_MUSIC_LIMITS */
 		68,		// smooth_up
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_POWERSUSPEND) || defined(USE_LCD_NOTIFIER)
