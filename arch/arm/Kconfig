@@ -1699,10 +1699,7 @@ config LOCAL_TIMERS
 
 source kernel/Kconfig.preempt
 
-config HZ
-	int
-	default 250 if ARCH_EXYNOS
-	default 100
+source kernel/Kconfig.hz
 
 config SCHED_HRTICK
 	def_bool HIGH_RES_TIMERS
