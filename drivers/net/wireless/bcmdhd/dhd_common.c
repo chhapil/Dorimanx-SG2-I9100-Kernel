@@ -1017,7 +1017,6 @@ wl_host_event(dhd_pub_t *dhd_pub, int *ifidx, void *pktdata, size_t pktlen,
 	if (pktlen < sizeof(bcm_event_t))
 		return (BCME_ERROR);
 
-
 	*data_ptr = &pvt_data[1];
 	event_data = *data_ptr;
 
